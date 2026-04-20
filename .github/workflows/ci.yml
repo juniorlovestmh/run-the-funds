@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  # Run on release tags (v*) so every tagged release is validated.
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ['v*']
+  # Allow manual runs from the Actions tab at any time.
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
