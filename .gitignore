@@ -1,0 +1,24 @@
+# Rust build artifacts
+/target
+
+# SQLite databases (created at runtime)
+# .gsd/gsd.db is the planning tool's state and is intentionally checked in.
+*.db
+*.db-shm
+*.db-wal
+!.gsd/gsd.db
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Crash dumps
+*.rs.bk

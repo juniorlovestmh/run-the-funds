@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>rtf · Pluggy Connect</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px; color: #333; }
+  h1 { font-size: 18px; margin-bottom: 8px; }
+  p { font-size: 14px; color: #666; }
+</style>
+</head>
+<body>
+<h1>rtf · Pluggy Connect</h1>
+<p id="status">Opening Pluggy Connect…</p>
+<script src="https://cdn.pluggy.ai/pluggy-connect/v1.3.1/pluggy-connect.js"></script>
+<script>
+  function setStatus(text) {
+    document.getElementById("status").textContent = text;
+  }
+
+  // Pluggy's vanilla JS SDK uses constructor + .init() pattern:
+  //   const pc = new PluggyConnect({...options...});
+  //   pc.init();
+  // (NOT `PluggyConnect.init({...})` — that's the React hook signature.)
+  const pluggyConnect = new PluggyConnect({
+    connectToken: "{{CONNECT_TOKEN}}",
+    includeSandbox: {{INCLUDE_SANDBOX}},
+    onSuccess: function(itemData) {
+      setStatus("Linked. Saving to rtf…");
+      fetch("/success", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData)
+      }).then(function() {
+        setStatus("Linked. You can close this tab.");
+      }).catch(function(err) {
+        setStatus("Widget succeeded but the local callback failed: " + err);
+      });
+    },
+    onError: function(error) {
+      fetch("/failure", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(error)
+      });
+      setStatus("Connect failed. Close this tab and check the rtf CLI for details.");
+    },
+    onClose: function() {
+      fetch("/exit", { method: "POST", body: "{}" });
+      setStatus("Cancelled. You can close this tab.");
+    },
+  });
+
+  pluggyConnect.init();
+</script>
+</body>
+</html>

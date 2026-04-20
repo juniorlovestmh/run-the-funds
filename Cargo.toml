@@ -1,0 +1,35 @@
+[package]
+name = "rtf"
+version = "0.1.0"
+edition = "2024"
+description = "Personal finance CLI tool with multi-currency support and agent orchestration"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
+thiserror = "2"
+# S02 — transaction import pipeline
+quick-xml = "0.36"
+csv = "1"
+# S03 — currency conversion (BCB PTAX HTTP client)
+ureq = "2"
+# S04 — bank sync (base64 decoding of SimpleFIN setup tokens)
+base64 = "0.22"
+# S04B — mTLS client-auth for Teller's Developer/Production tiers
+rustls = { version = "0.23", features = ["ring"] }
+rustls-pemfile = "2"
+webpki-roots = "0.26"
+# S04C — local callback server + browser launcher for Teller/Pluggy Connect widgets
+tiny_http = "0.12"
+webbrowser = "1"
+# S05 — regex-backed categorization rules
+regex = "1"
+
+[dev-dependencies]
+tempfile = "3"
+rust_decimal_macros = "1"

@@ -1,0 +1,20 @@
+# M001: Core Financial Engine
+
+## Vision
+A personal finance CLI tool in Rust that ingests transactions from ~10 accounts across the US and Brazil, normalizes them into a unified SQLite database with multi-currency support (USD↔BRL at historically accurate BCB PTAX rates), and exposes composable CLI subcommands for an external AI agent to orchestrate spending analysis, goal tracking, debt management, and financial health scoring across a multi-person household.
+
+## Slice Overview
+| ID | Slice | Risk | Depends | Done | After this |
+|----|-------|------|---------|------|------------|
+| S01 | S01 | high | — | ✅ | rtf accounts create persists an account to SQLite and rtf accounts list returns it as JSON. go test ./... passes with full domain model coverage for Account, Transaction, Category, Money, Person entities. |
+| S02 | S02 | high | — | ✅ | Import a real Nubank OFX file and a real Chase CSV file. rtf transactions list --format json shows normalized transactions from both banks with correct amounts, dates, and payee names. |
+| S03 | S03 | high | — | ✅ | BRL transactions display with USD equivalent at the correct PTAX rate for each transaction date. SimpleFIN adapter pulls US bank transactions. Pluggy adapter pulls Brazilian bank transactions. rtf convert 1000 BRL --to USD --date 2026-03-15 returns accurate conversion. |
+| S04 | S04 | high | — | ✅ | rtf sync pulls US bank transactions via SimpleFIN and Brazilian bank transactions via Pluggy, reconciling them into the local DB with per-account last-sync-at bookkeeping. Secrets (SIMPLEFIN_TOKEN, PLUGGY_CLIENT_ID/SECRET) live in env vars, not the repo. Replaces the manual QFX/OFX download flow from S02 — no manual step required. |
+| S05 | S05 | medium | — | ✅ | After importing transactions, rtf categorize applies rules and shows categorization summary. Split a Costco transaction into groceries + household. Internal transfer between checking accounts detected and excluded from spending report. |
+| S04B | S04B | medium | — | ✅ | rtf teller setup --access-token <TOKEN> persists credentials; rtf sync --provider teller pulls US bank transactions via Teller's API; unified rtf sync runs simplefin + pluggy + teller with error isolation. No changes to service layer or storage. |
+| S04C | S04C | medium | — | ✅ | rtf teller connect opens a browser to Teller Connect, user links a bank, rtf captures the enrollment and stores it. Repeat for each bank — N enrollments per provider. rtf pluggy connect does the same for Brazilian banks. rtf sync --provider teller iterates all Teller enrollments; same for Pluggy. New provider_connections table supports multi-bank per provider without schema conflict. |
+| S06 | S06 | medium | — | ⬜ | rtf sync pulls every account/transaction/category/tag from Monarch Money via mmoney subprocess. rtf transactions list matches mmoney count. rtf spending matches Monarch's cashflow within 1%. Teller/SimpleFIN/Pluggy/Connect code removed. |
+| S04D | S04D | low | — | ✅ | rtf connections remove --id <uuid> deletes a stored enrollment/item. rtf connections remove --provider teller --external-id <id> deletes by lookup. Legacy row from S04C's migration 006 can be cleaned up via this command. No other code changes. |
+| S07 | Investments & holdings schema with PTAX-aware valuation | medium | S03, S06 | ⬜ | rtf holdings list shows positions with cost basis + value + unrealized P&L. rtf net-worth gives PTAX-reconciled USD total. rtf holdings history --ticker BTC-USD shows value-over-time. |
+| S08 | Goals, Debt, Health + Bill Schedule | medium | S05, S06, S07 | ⬜ | rtf goals progress. rtf debt payoff. rtf health. rtf bills upcoming. rtf recurring list. |
+| S09 | Agent-Ready Query Layer + Export | low | S05, S06, S07, S08 | ⬜ | All CLI subcommands return structured JSON. `rtf forecast` shows projected next-month spending by category. `rtf export --format csv` produces complete transaction export. An external agent can compose subcommands to answer: 'how much did we spend on food across all accounts in March in USD?' |
