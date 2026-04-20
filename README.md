@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.png" alt="Run The Funds — local-first, agent-ready personal finance CLI" width="100%">
+</p>
+
 # Run The Funds
 
 **A local-first, agent-ready personal finance CLI for multi-currency
