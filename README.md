@@ -2,6 +2,19 @@
   <img src="docs/banner.png" alt="Run The Funds — local-first, agent-ready personal finance CLI" width="100%">
 </p>
 
+<p align="center">
+  <a href="https://github.com/juniorlovestmh/run-the-funds/actions/workflows/ci.yml">
+    <img alt="CI" src="https://github.com/juniorlovestmh/run-the-funds/actions/workflows/ci.yml/badge.svg">
+  </a>
+  <a href="https://github.com/juniorlovestmh/run-the-funds/releases/latest">
+    <img alt="Release" src="https://img.shields.io/github/v/release/juniorlovestmh/run-the-funds?color=3FB950">
+  </a>
+  <a href="./LICENSE">
+    <img alt="License: AGPL-3.0" src="https://img.shields.io/github/license/juniorlovestmh/run-the-funds?color=8B949E">
+  </a>
+  <img alt="Rust edition 2024" src="https://img.shields.io/badge/rust-edition%202024-orange">
+</p>
+
 # Run The Funds
 
 **A local-first, agent-ready personal finance CLI for multi-currency
