@@ -6,7 +6,8 @@
 //! rideshare, groceries, payroll, student loans, internal transfers).
 //!
 //! Usage:
-//!     cargo run --release --example seed_demo -- --db /tmp/rtf-demo.db
+//!     cargo run --release --example seed_demo                   # writes to ./rtf-demo.db
+//!     cargo run --release --example seed_demo -- --db <path>    # custom path
 //!
 //! Deterministic: same inputs produce the same DB every run (fixed RNG seed).
 //! Safe to run repeatedly; output DB is wiped at start.
@@ -84,10 +85,10 @@ fn parse_db_arg() -> String {
             return args
                 .get(i + 1)
                 .cloned()
-                .unwrap_or_else(|| "/tmp/rtf-demo.db".into());
+                .unwrap_or_else(|| "rtf-demo.db".into());
         }
     }
-    "/tmp/rtf-demo.db".into()
+    "rtf-demo.db".into()
 }
 
 // ---- groups -------------------------------------------------------------
