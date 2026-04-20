@@ -21,7 +21,7 @@ use crate::domain::connections::{ProviderConnection, ProviderConnectionRepositor
 use crate::domain::credentials::{ProviderCredentials, ProviderCredentialsRepository};
 use crate::domain::error::DomainError;
 use crate::infrastructure::connect::{
-    launch_browser, render_template, CallbackKind, ConnectServer,
+    CallbackKind, ConnectServer, launch_browser, render_template,
 };
 use crate::infrastructure::storage::{
     Database, SqliteProviderConnectionRepository, SqliteProviderCredentialsRepository,
@@ -96,8 +96,7 @@ fn store_app_creds(
     }
     let data = serde_json::Value::Object(blob).to_string();
 
-    let creds =
-        ProviderCredentials::new(Uuid::new_v4().to_string(), "teller".into(), data)?;
+    let creds = ProviderCredentials::new(Uuid::new_v4().to_string(), "teller".into(), data)?;
     let repo = SqliteProviderCredentialsRepository::new(db);
     repo.save(&creds)?;
 
@@ -168,9 +167,13 @@ fn do_connect(db: &Database) -> Result<serde_json::Value, DomainError> {
     }
 
     // 5. Parse the enrollment payload, upsert the connection row.
-    let (enrollment_id, access_token, institution_name) =
-        parse_enrollment(&captured.body)?;
-    persist_enrollment(db, &enrollment_id, &access_token, institution_name.as_deref())?;
+    let (enrollment_id, access_token, institution_name) = parse_enrollment(&captured.body)?;
+    persist_enrollment(
+        db,
+        &enrollment_id,
+        &access_token,
+        institution_name.as_deref(),
+    )?;
 
     Ok(serde_json::json!({
         "provider": "teller",
@@ -201,12 +204,9 @@ fn parse_app_id_and_env(data: &str) -> Result<(String, String), DomainError> {
     Ok((app_id, environment))
 }
 
-fn parse_enrollment(
-    body: &str,
-) -> Result<(String, String, Option<String>), DomainError> {
-    let parsed: serde_json::Value = serde_json::from_str(body).map_err(|e| {
-        DomainError::Import(format!("Teller enrollment payload not JSON: {e}"))
-    })?;
+fn parse_enrollment(body: &str) -> Result<(String, String, Option<String>), DomainError> {
+    let parsed: serde_json::Value = serde_json::from_str(body)
+        .map_err(|e| DomainError::Import(format!("Teller enrollment payload not JSON: {e}")))?;
     let access_token = parsed
         .get("accessToken")
         .and_then(|v| v.as_str())
@@ -282,8 +282,7 @@ mod tests {
     #[test]
     fn store_app_creds_sandbox_no_cert() {
         let db = Database::in_memory().unwrap();
-        let msg =
-            store_app_creds(&db, "app_xxx".into(), None, None, None).unwrap();
+        let msg = store_app_creds(&db, "app_xxx".into(), None, None, None).unwrap();
         assert!(msg.contains("sandbox"));
         let stored = SqliteProviderCredentialsRepository::new(&db)
             .find_by_provider("teller")
@@ -325,14 +324,7 @@ mod tests {
     #[test]
     fn store_app_creds_rejects_partial_cert_args() {
         let db = Database::in_memory().unwrap();
-        assert!(store_app_creds(
-            &db,
-            "app_xxx".into(),
-            Some("cert".into()),
-            None,
-            None
-        )
-        .is_err());
+        assert!(store_app_creds(&db, "app_xxx".into(), Some("cert".into()), None, None).is_err());
     }
 
     #[test]
@@ -344,14 +336,9 @@ mod tests {
     #[test]
     fn store_app_creds_rejects_bogus_environment() {
         let db = Database::in_memory().unwrap();
-        assert!(store_app_creds(
-            &db,
-            "app_xxx".into(),
-            None,
-            None,
-            Some("wild-west".into())
-        )
-        .is_err());
+        assert!(
+            store_app_creds(&db, "app_xxx".into(), None, None, Some("wild-west".into())).is_err()
+        );
     }
 
     // ---- connect parsing tests ----------------------------------------------

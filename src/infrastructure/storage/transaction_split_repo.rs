@@ -202,9 +202,13 @@ mod tests {
         // Deleting the parent transaction removes its splits via FK ON DELETE CASCADE.
         let (db, food, _) = setup();
         let split_repo = SqliteTransactionSplitRepository::new(&db);
-        split_repo.save(&mk_split("txn-1", &food, dec!(-150))).unwrap();
+        split_repo
+            .save(&mk_split("txn-1", &food, dec!(-150)))
+            .unwrap();
 
-        SqliteTransactionRepository::new(&db).delete("txn-1").unwrap();
+        SqliteTransactionRepository::new(&db)
+            .delete("txn-1")
+            .unwrap();
 
         assert!(split_repo.find_by_transaction("txn-1").unwrap().is_empty());
     }

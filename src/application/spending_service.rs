@@ -327,9 +327,7 @@ fn date_window(from: Option<NaiveDate>, to: Option<NaiveDate>) -> (NaiveDate, Na
     (start, end)
 }
 
-fn to_currency_totals(
-    buckets: &HashMap<CurrencyCode, (Decimal, usize)>,
-) -> Vec<CurrencyTotal> {
+fn to_currency_totals(buckets: &HashMap<CurrencyCode, (Decimal, usize)>) -> Vec<CurrencyTotal> {
     buckets
         .iter()
         .map(|(c, (amount, count))| CurrencyTotal {
@@ -383,7 +381,13 @@ mod tests {
                 [&now],
             )
             .unwrap();
-        (db, "chase".into(), "cat-food".into(), "cat-rent".into(), "cat-fun".into())
+        (
+            db,
+            "chase".into(),
+            "cat-food".into(),
+            "cat-rent".into(),
+            "cat-fun".into(),
+        )
     }
 
     fn seed_txn(
@@ -481,9 +485,17 @@ mod tests {
         assert_eq!(report.transaction_count, 1);
         assert_eq!(report.split_count, 2);
         assert_eq!(report.by_category.len(), 2);
-        let food_line = report.by_category.iter().find(|c| c.category_id == food).unwrap();
+        let food_line = report
+            .by_category
+            .iter()
+            .find(|c| c.category_id == food)
+            .unwrap();
         assert_eq!(food_line.amount, "-100");
-        let rent_line = report.by_category.iter().find(|c| c.category_id == rent).unwrap();
+        let rent_line = report
+            .by_category
+            .iter()
+            .find(|c| c.category_id == rent)
+            .unwrap();
         assert_eq!(rent_line.amount, "-50");
     }
 
@@ -501,7 +513,9 @@ mod tests {
         .unwrap();
         transfer.external_id = Some("ext-transfer".into());
         transfer.transfer_pair_id = Some("pair-xyz".into());
-        SqliteTransactionRepository::new(&db).save(&transfer).unwrap();
+        SqliteTransactionRepository::new(&db)
+            .save(&transfer)
+            .unwrap();
 
         let report = service(&db).compute(SpendingOptions::default()).unwrap();
         assert_eq!(report.transaction_count, 1);
@@ -522,7 +536,9 @@ mod tests {
         .unwrap();
         transfer.external_id = Some("ext-transfer".into());
         transfer.transfer_pair_id = Some("pair-xyz".into());
-        SqliteTransactionRepository::new(&db).save(&transfer).unwrap();
+        SqliteTransactionRepository::new(&db)
+            .save(&transfer)
+            .unwrap();
 
         let report = service(&db)
             .compute(SpendingOptions {
@@ -600,10 +616,18 @@ mod tests {
         let report = service(&db).compute(SpendingOptions::default()).unwrap();
         assert_eq!(report.by_group.len(), 2);
         // Essentials group: food + rent = -1550.
-        let essentials = report.by_group.iter().find(|g| g.group_id == "g-essentials").unwrap();
+        let essentials = report
+            .by_group
+            .iter()
+            .find(|g| g.group_id == "g-essentials")
+            .unwrap();
         assert_eq!(essentials.amount, "-1550");
         // Lifestyle group: fun = -200.
-        let lifestyle = report.by_group.iter().find(|g| g.group_id == "g-lifestyle").unwrap();
+        let lifestyle = report
+            .by_group
+            .iter()
+            .find(|g| g.group_id == "g-lifestyle")
+            .unwrap();
         assert_eq!(lifestyle.amount, "-200");
     }
 }

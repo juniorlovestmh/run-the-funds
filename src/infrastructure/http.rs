@@ -13,8 +13,8 @@
 use std::io::Cursor;
 use std::sync::Arc;
 
-use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 
 use crate::domain::error::DomainError;
 
@@ -99,9 +99,7 @@ impl UreqHttpClient {
 
         let key = rustls_pemfile::private_key(&mut Cursor::new(key_pem))
             .map_err(|e| DomainError::Import(format!("parse client key PEM: {e}")))?
-            .ok_or_else(|| {
-                DomainError::Import("client key PEM contained no private key".into())
-            })?;
+            .ok_or_else(|| DomainError::Import("client key PEM contained no private key".into()))?;
 
         let mut root_store = rustls::RootCertStore::empty();
         root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
@@ -166,12 +164,7 @@ impl HttpClient for UreqHttpClient {
         Self::collapse("GET (basic auth)", url, result)
     }
 
-    fn post(
-        &self,
-        url: &str,
-        body: &str,
-        headers: &[(&str, &str)],
-    ) -> Result<String, DomainError> {
+    fn post(&self, url: &str, body: &str, headers: &[(&str, &str)]) -> Result<String, DomainError> {
         let mut req = self.agent.post(url);
         for (k, v) in headers {
             req = req.set(k, v);
@@ -179,11 +172,7 @@ impl HttpClient for UreqHttpClient {
         Self::collapse("POST", url, req.send_string(body))
     }
 
-    fn get_with_headers(
-        &self,
-        url: &str,
-        headers: &[(&str, &str)],
-    ) -> Result<String, DomainError> {
+    fn get_with_headers(&self, url: &str, headers: &[(&str, &str)]) -> Result<String, DomainError> {
         let mut req = self.agent.get(url);
         for (k, v) in headers {
             req = req.set(k, v);

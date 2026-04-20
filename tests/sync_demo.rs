@@ -35,9 +35,8 @@ fn parse_stdout(output: &Output) -> Value {
 
 fn parse_stderr(output: &Output) -> Value {
     let stderr = std::str::from_utf8(&output.stderr).expect("stderr not utf-8");
-    serde_json::from_str(stderr).unwrap_or_else(|e| {
-        panic!("failed to parse stderr JSON: {e}\nstderr: {stderr}")
-    })
+    serde_json::from_str(stderr)
+        .unwrap_or_else(|e| panic!("failed to parse stderr JSON: {e}\nstderr: {stderr}"))
 }
 
 fn temp_db() -> (TempDir, String) {
@@ -52,9 +51,18 @@ fn sync_missing_simplefin_credentials_has_clear_message() {
     let (_dir, db) = temp_db();
     // Force migrations by creating an account.
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&["--db", &db, "sync", "--provider", "simplefin"]);
@@ -62,16 +70,28 @@ fn sync_missing_simplefin_credentials_has_clear_message() {
     let err = parse_stderr(&out);
     let msg = err["message"].as_str().unwrap();
     assert!(msg.contains("SimpleFIN not configured"), "got: {msg}");
-    assert!(msg.contains("rtf simplefin setup"), "should name the setup command");
+    assert!(
+        msg.contains("rtf simplefin setup"),
+        "should name the setup command"
+    );
 }
 
 #[test]
 fn sync_missing_pluggy_credentials_has_clear_message() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "BRL", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "BRL",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&["--db", &db, "sync", "--provider", "pluggy"]);
@@ -86,26 +106,46 @@ fn sync_missing_pluggy_credentials_has_clear_message() {
 fn sync_unknown_provider_errors() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&["--db", &db, "sync", "--provider", "bogus"]);
     assert!(!out.status.success());
-    assert!(parse_stderr(&out)["message"]
-        .as_str()
-        .unwrap()
-        .contains("unknown provider"));
+    assert!(
+        parse_stderr(&out)["message"]
+            .as_str()
+            .unwrap()
+            .contains("unknown provider")
+    );
 }
 
 #[test]
 fn sync_unified_with_nothing_configured_guides_user() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&["--db", &db, "sync"]);
@@ -122,21 +162,36 @@ fn sync_unified_with_nothing_configured_guides_user() {
 fn sync_malformed_since_errors() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&[
-        "--db", &db, "sync",
-        "--provider", "simplefin",
-        "--since", "not-a-date",
+        "--db",
+        &db,
+        "sync",
+        "--provider",
+        "simplefin",
+        "--since",
+        "not-a-date",
     ]);
     assert!(!out.status.success());
-    assert!(parse_stderr(&out)["message"]
-        .as_str()
-        .unwrap()
-        .contains("invalid --since date"));
+    assert!(
+        parse_stderr(&out)["message"]
+            .as_str()
+            .unwrap()
+            .contains("invalid --since date")
+    );
 }
 
 #[test]
@@ -145,43 +200,79 @@ fn accounts_link_roundtrips_through_cli() {
 
     // Create and capture id.
     let out = run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "Chase", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "Chase",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
-    let id = parse_stdout(&out)["data"]["id"].as_str().unwrap().to_string();
+    let id = parse_stdout(&out)["data"]["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
 
     // Link.
     let out = run(&[
-        "--db", &db, "accounts", "link",
-        "--id", &id,
-        "--provider", "simplefin",
-        "--external-id", "ext-abc",
+        "--db",
+        &db,
+        "accounts",
+        "link",
+        "--id",
+        &id,
+        "--provider",
+        "simplefin",
+        "--external-id",
+        "ext-abc",
     ]);
-    assert!(out.status.success(), "link failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "link failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let data = &parse_stdout(&out)["data"];
     assert_eq!(data["external_provider"], "simplefin");
     assert_eq!(data["external_account_id"], "ext-abc");
 
     // Re-link without --force is rejected.
     let out = run(&[
-        "--db", &db, "accounts", "link",
-        "--id", &id,
-        "--provider", "simplefin",
-        "--external-id", "ext-xyz",
+        "--db",
+        &db,
+        "accounts",
+        "link",
+        "--id",
+        &id,
+        "--provider",
+        "simplefin",
+        "--external-id",
+        "ext-xyz",
     ]);
     assert!(!out.status.success());
-    assert!(parse_stderr(&out)["message"]
-        .as_str()
-        .unwrap()
-        .contains("already linked"));
+    assert!(
+        parse_stderr(&out)["message"]
+            .as_str()
+            .unwrap()
+            .contains("already linked")
+    );
 
     // With --force it succeeds.
     let out = run(&[
-        "--db", &db, "accounts", "link",
-        "--id", &id,
-        "--provider", "simplefin",
-        "--external-id", "ext-xyz",
+        "--db",
+        &db,
+        "accounts",
+        "link",
+        "--id",
+        &id,
+        "--provider",
+        "simplefin",
+        "--external-id",
+        "ext-xyz",
         "--force",
     ]);
     assert!(out.status.success());
@@ -193,40 +284,78 @@ fn accounts_link_roundtrips_through_cli() {
 fn accounts_link_rejects_unknown_provider() {
     let (_dir, db) = temp_db();
     let out = run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
-    let id = parse_stdout(&out)["data"]["id"].as_str().unwrap().to_string();
-
-    let out = run(&[
-        "--db", &db, "accounts", "link",
-        "--id", &id,
-        "--provider", "bogus",
-        "--external-id", "x",
-    ]);
-    assert!(!out.status.success());
-    assert!(parse_stderr(&out)["message"]
+    let id = parse_stdout(&out)["data"]["id"]
         .as_str()
         .unwrap()
-        .contains("unknown provider"));
+        .to_string();
+
+    let out = run(&[
+        "--db",
+        &db,
+        "accounts",
+        "link",
+        "--id",
+        &id,
+        "--provider",
+        "bogus",
+        "--external-id",
+        "x",
+    ]);
+    assert!(!out.status.success());
+    assert!(
+        parse_stderr(&out)["message"]
+            .as_str()
+            .unwrap()
+            .contains("unknown provider")
+    );
 }
 
 #[test]
 fn pluggy_setup_stores_app_credentials() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "BRL", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "BRL",
+        "--owner",
+        "Sky",
     ]);
 
     let out = run(&[
-        "--db", &db, "pluggy", "setup",
-        "--client-id", "cid-xyz",
-        "--client-secret", "csec-xyz",
+        "--db",
+        &db,
+        "pluggy",
+        "setup",
+        "--client-id",
+        "cid-xyz",
+        "--client-secret",
+        "csec-xyz",
     ]);
-    assert!(out.status.success(), "setup failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "setup failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let db_handle = Database::open(&db).unwrap();
     use rtf::domain::credentials::ProviderCredentialsRepository;
@@ -249,9 +378,18 @@ fn pluggy_setup_stores_app_credentials() {
 fn sync_missing_teller_credentials_has_clear_message() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
     let out = run(&["--db", &db, "sync", "--provider", "teller"]);
     assert!(!out.status.success());
@@ -264,15 +402,25 @@ fn sync_missing_teller_credentials_has_clear_message() {
 fn teller_setup_stores_app_credentials() {
     let (_dir, db) = temp_db();
     run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
-    let out = run(&[
-        "--db", &db, "teller", "setup",
-        "--app-id", "app_test_xyz",
-    ]);
-    assert!(out.status.success(), "setup failed: {}", String::from_utf8_lossy(&out.stderr));
+    let out = run(&["--db", &db, "teller", "setup", "--app-id", "app_test_xyz"]);
+    assert!(
+        out.status.success(),
+        "setup failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let db_handle = Database::open(&db).unwrap();
     use rtf::domain::credentials::ProviderCredentialsRepository;
@@ -290,19 +438,41 @@ fn teller_setup_stores_app_credentials() {
 fn accounts_link_accepts_teller_provider() {
     let (_dir, db) = temp_db();
     let out = run(&[
-        "--db", &db, "accounts", "create",
-        "--name", "X", "--type", "checking",
-        "--currency", "USD", "--owner", "Sky",
+        "--db",
+        &db,
+        "accounts",
+        "create",
+        "--name",
+        "X",
+        "--type",
+        "checking",
+        "--currency",
+        "USD",
+        "--owner",
+        "Sky",
     ]);
-    let id = parse_stdout(&out)["data"]["id"].as_str().unwrap().to_string();
+    let id = parse_stdout(&out)["data"]["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
 
     let out = run(&[
-        "--db", &db, "accounts", "link",
-        "--id", &id,
-        "--provider", "teller",
-        "--external-id", "acc_teller_1",
+        "--db",
+        &db,
+        "accounts",
+        "link",
+        "--id",
+        &id,
+        "--provider",
+        "teller",
+        "--external-id",
+        "acc_teller_1",
     ]);
-    assert!(out.status.success(), "link failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "link failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let data = &parse_stdout(&out)["data"];
     assert_eq!(data["external_provider"], "teller");
     assert_eq!(data["external_account_id"], "acc_teller_1");
@@ -335,10 +505,7 @@ fn live_teller_connect_smoke() {
     let (_dir, db) = temp_db();
 
     let out = run(&[
-        "--db", &db, "teller", "setup",
-        "--app-id", &app_id,
-        "--cert", &cert,
-        "--key", &key,
+        "--db", &db, "teller", "setup", "--app-id", &app_id, "--cert", &cert, "--key", &key,
     ]);
     assert!(out.status.success());
 
@@ -384,10 +551,16 @@ fn live_pluggy_sync_smoke() {
     // Create a BRL account + link it to one of the provider's accounts.
     // For the smoke we just run setup + sync and assert the JSON shape.
     run(&[
-        "--db", &db, "pluggy", "setup",
-        "--client-id", &client_id,
-        "--client-secret", &client_secret,
-        "--item-id", &item_id,
+        "--db",
+        &db,
+        "pluggy",
+        "setup",
+        "--client-id",
+        &client_id,
+        "--client-secret",
+        &client_secret,
+        "--item-id",
+        &item_id,
     ]);
 
     let out = run(&["--db", &db, "sync", "--provider", "pluggy"]);

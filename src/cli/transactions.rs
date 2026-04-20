@@ -45,9 +45,7 @@ pub fn handle_import(db: &Database, file: String, format: String, account_id: St
     // CSV is reserved for a later slice — surface an explicit "not yet" error
     // rather than a generic "unsupported" so operators aren't left guessing.
     if fmt == "csv" {
-        print_error(
-            "csv import is deferred to a later slice — use an OFX/QFX export for now",
-        );
+        print_error("csv import is deferred to a later slice — use an OFX/QFX export for now");
         std::process::exit(2);
     }
     // "ofx" and "qfx" both route to the OFX adapter (QFX is OFX 1.x SGML).
@@ -163,7 +161,11 @@ fn build_views<'a>(
             txn.date,
         ) {
             Ok(c) => {
-                let status = if c.fallback_reason.is_some() { "fallback" } else { "ok" };
+                let status = if c.fallback_reason.is_some() {
+                    "fallback"
+                } else {
+                    "ok"
+                };
                 views.push(TransactionView {
                     txn,
                     amount_usd: Some(c.amount.to_string()),

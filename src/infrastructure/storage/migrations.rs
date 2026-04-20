@@ -35,10 +35,7 @@ const MIGRATIONS: &[(&str, &str)] = &[
         "008_transaction_splits",
         include_str!("../../../migrations/008_transaction_splits.sql"),
     ),
-    (
-        "009_tags",
-        include_str!("../../../migrations/009_tags.sql"),
-    ),
+    ("009_tags", include_str!("../../../migrations/009_tags.sql")),
     (
         "010_category_external_ids",
         include_str!("../../../migrations/010_category_external_ids.sql"),

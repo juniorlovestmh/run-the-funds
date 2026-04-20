@@ -87,9 +87,7 @@ impl ProviderConnectionRepository for SqliteProviderConnectionRepository<'_> {
     fn find_by_provider(&self, provider: &str) -> Result<Vec<ProviderConnection>, DomainError> {
         self.db
             .conn()
-            .prepare(
-                "SELECT * FROM provider_connections WHERE provider = ?1 ORDER BY created_at",
-            )
+            .prepare("SELECT * FROM provider_connections WHERE provider = ?1 ORDER BY created_at")
             .map_err(|e| DomainError::Storage(format!("prepare find_by_provider: {e}")))?
             .query_map([provider], Self::row_to_connection)
             .map_err(|e| DomainError::Storage(format!("find_by_provider: {e}")))?
@@ -165,11 +163,22 @@ mod tests {
     fn save_and_find_by_provider() {
         let db = Database::in_memory().unwrap();
         let repo = SqliteProviderConnectionRepository::new(&db);
-        repo.save(&conn("teller", "enr_1", r#"{"access_token":"t1"}"#, Some("Chase")))
+        repo.save(&conn(
+            "teller",
+            "enr_1",
+            r#"{"access_token":"t1"}"#,
+            Some("Chase"),
+        ))
+        .unwrap();
+        repo.save(&conn(
+            "teller",
+            "enr_2",
+            r#"{"access_token":"t2"}"#,
+            Some("Capital One"),
+        ))
+        .unwrap();
+        repo.save(&conn("pluggy", "item_x", "{}", Some("Nubank")))
             .unwrap();
-        repo.save(&conn("teller", "enr_2", r#"{"access_token":"t2"}"#, Some("Capital One")))
-            .unwrap();
-        repo.save(&conn("pluggy", "item_x", "{}", Some("Nubank"))).unwrap();
 
         let teller = repo.find_by_provider("teller").unwrap();
         assert_eq!(teller.len(), 2);
@@ -185,10 +194,20 @@ mod tests {
     fn save_upserts_on_duplicate_provider_external_id() {
         let db = Database::in_memory().unwrap();
         let repo = SqliteProviderConnectionRepository::new(&db);
-        repo.save(&conn("teller", "enr_1", r#"{"access_token":"old"}"#, Some("Chase")))
-            .unwrap();
-        repo.save(&conn("teller", "enr_1", r#"{"access_token":"new"}"#, Some("Chase Rotated")))
-            .unwrap();
+        repo.save(&conn(
+            "teller",
+            "enr_1",
+            r#"{"access_token":"old"}"#,
+            Some("Chase"),
+        ))
+        .unwrap();
+        repo.save(&conn(
+            "teller",
+            "enr_1",
+            r#"{"access_token":"new"}"#,
+            Some("Chase Rotated"),
+        ))
+        .unwrap();
 
         let all = repo.find_by_provider("teller").unwrap();
         assert_eq!(all.len(), 1);
@@ -200,12 +219,19 @@ mod tests {
     fn find_by_external_id_returns_matching() {
         let db = Database::in_memory().unwrap();
         let repo = SqliteProviderConnectionRepository::new(&db);
-        repo.save(&conn("teller", "enr_a", r#"{"access_token":"x"}"#, None)).unwrap();
+        repo.save(&conn("teller", "enr_a", r#"{"access_token":"x"}"#, None))
+            .unwrap();
         repo.save(&conn("pluggy", "enr_a", "{}", None)).unwrap();
 
-        let a = repo.find_by_external_id("teller", "enr_a").unwrap().unwrap();
+        let a = repo
+            .find_by_external_id("teller", "enr_a")
+            .unwrap()
+            .unwrap();
         assert_eq!(a.provider, "teller");
-        let b = repo.find_by_external_id("pluggy", "enr_a").unwrap().unwrap();
+        let b = repo
+            .find_by_external_id("pluggy", "enr_a")
+            .unwrap()
+            .unwrap();
         assert_eq!(b.provider, "pluggy");
         assert!(
             repo.find_by_external_id("teller", "missing")
@@ -268,7 +294,9 @@ mod tests {
 
         // Re-run migration 006 SQL directly.
         db.conn()
-            .execute_batch(include_str!("../../../migrations/006_migrate_connections.sql"))
+            .execute_batch(include_str!(
+                "../../../migrations/006_migrate_connections.sql"
+            ))
             .unwrap();
 
         // Assert the access_token moved into provider_connections.

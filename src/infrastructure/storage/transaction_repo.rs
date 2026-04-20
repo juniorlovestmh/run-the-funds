@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDate, Utc};
-use rust_decimal::Decimal;
 use rusqlite::OptionalExtension;
+use rust_decimal::Decimal;
 use std::str::FromStr;
 
 use crate::domain::currency::{CurrencyCode, Money};
@@ -45,11 +45,7 @@ impl<'a> SqliteTransactionRepository<'a> {
             rusqlite::Error::FromSqlConversionFailure(4, rusqlite::types::Type::Text, Box::from(e))
         })?;
         let status = TransactionStatus::from_str(&status_str).map_err(|e| {
-            rusqlite::Error::FromSqlConversionFailure(
-                10,
-                rusqlite::types::Type::Text,
-                Box::from(e),
-            )
+            rusqlite::Error::FromSqlConversionFailure(10, rusqlite::types::Type::Text, Box::from(e))
         })?;
 
         let parse_dt = |s: &str| {
@@ -217,7 +213,10 @@ impl TransactionRepository for SqliteTransactionRepository<'_> {
             .prepare(sql)
             .map_err(|e| DomainError::Storage(format!("prepare find_uncategorized: {e}")))?;
         let rows = stmt
-            .query_map(rusqlite::params_from_iter(params.iter()), Self::row_to_transaction)
+            .query_map(
+                rusqlite::params_from_iter(params.iter()),
+                Self::row_to_transaction,
+            )
             .map_err(|e| DomainError::Storage(format!("find_uncategorized: {e}")))?;
         rows.collect::<Result<Vec<_>, _>>()
             .map_err(|e| DomainError::Storage(format!("find_uncategorized collect: {e}")))
@@ -271,9 +270,9 @@ impl TransactionRepository for SqliteTransactionRepository<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::account::AccountRepository as _;
     use crate::domain::account::{Account, AccountType};
     use crate::infrastructure::storage::SqliteAccountRepository;
-    use crate::domain::account::AccountRepository as _;
     use rust_decimal_macros::dec;
 
     fn setup() -> Database {
@@ -306,7 +305,13 @@ mod tests {
         db
     }
 
-    fn make_txn(id: &str, account_id: &str, date: (i32, u32, u32), amount: Decimal, currency: CurrencyCode) -> Transaction {
+    fn make_txn(
+        id: &str,
+        account_id: &str,
+        date: (i32, u32, u32),
+        amount: Decimal,
+        currency: CurrencyCode,
+    ) -> Transaction {
         Transaction::new(
             id.into(),
             account_id.into(),
@@ -320,7 +325,13 @@ mod tests {
     fn save_and_find_by_id() {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
-        let txn = make_txn("txn-001", "acc-001", (2026, 3, 15), dec!(-45.99), CurrencyCode::USD);
+        let txn = make_txn(
+            "txn-001",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-45.99),
+            CurrencyCode::USD,
+        );
 
         repo.save(&txn).unwrap();
         let found = repo.find_by_id("txn-001").unwrap().unwrap();
@@ -345,14 +356,41 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        repo.save(&make_txn("t1", "acc-001", (2026, 3, 10), dec!(-10.00), CurrencyCode::USD)).unwrap();
-        repo.save(&make_txn("t2", "acc-001", (2026, 3, 15), dec!(-20.00), CurrencyCode::USD)).unwrap();
-        repo.save(&make_txn("t3", "acc-002", (2026, 3, 12), dec!(-30.00), CurrencyCode::BRL)).unwrap();
+        repo.save(&make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 10),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
+        repo.save(&make_txn(
+            "t2",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-20.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
+        repo.save(&make_txn(
+            "t3",
+            "acc-002",
+            (2026, 3, 12),
+            dec!(-30.00),
+            CurrencyCode::BRL,
+        ))
+        .unwrap();
 
         let chase_txns = repo.find_by_account("acc-001").unwrap();
         assert_eq!(chase_txns.len(), 2);
-        assert_eq!(chase_txns[0].date, NaiveDate::from_ymd_opt(2026, 3, 15).unwrap());
-        assert_eq!(chase_txns[1].date, NaiveDate::from_ymd_opt(2026, 3, 10).unwrap());
+        assert_eq!(
+            chase_txns[0].date,
+            NaiveDate::from_ymd_opt(2026, 3, 15).unwrap()
+        );
+        assert_eq!(
+            chase_txns[1].date,
+            NaiveDate::from_ymd_opt(2026, 3, 10).unwrap()
+        );
     }
 
     #[test]
@@ -360,10 +398,38 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        repo.save(&make_txn("t1", "acc-001", (2026, 3, 1), dec!(-10.00), CurrencyCode::USD)).unwrap();
-        repo.save(&make_txn("t2", "acc-001", (2026, 3, 15), dec!(-20.00), CurrencyCode::USD)).unwrap();
-        repo.save(&make_txn("t3", "acc-001", (2026, 3, 31), dec!(-30.00), CurrencyCode::USD)).unwrap();
-        repo.save(&make_txn("t4", "acc-001", (2026, 4, 5), dec!(-40.00), CurrencyCode::USD)).unwrap();
+        repo.save(&make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 1),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
+        repo.save(&make_txn(
+            "t2",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-20.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
+        repo.save(&make_txn(
+            "t3",
+            "acc-001",
+            (2026, 3, 31),
+            dec!(-30.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
+        repo.save(&make_txn(
+            "t4",
+            "acc-001",
+            (2026, 4, 5),
+            dec!(-40.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
 
         let march = repo
             .find_by_date_range(
@@ -379,7 +445,14 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        repo.save(&make_txn("t1", "acc-001", (2026, 3, 15), dec!(-10.00), CurrencyCode::USD)).unwrap();
+        repo.save(&make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        ))
+        .unwrap();
         assert!(repo.find_by_id("t1").unwrap().is_some());
 
         repo.delete("t1").unwrap();
@@ -391,7 +464,13 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let mut txn = make_txn("t1", "acc-001", (2026, 3, 15), dec!(-99.99), CurrencyCode::USD);
+        let mut txn = make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-99.99),
+            CurrencyCode::USD,
+        );
         txn.payee = Some("Costco".into());
         txn.description = Some("Weekly groceries".into());
         txn.external_id = Some("ext-123".into());
@@ -413,7 +492,13 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let txn = make_txn("t-brl", "acc-002", (2026, 3, 10), dec!(-150.50), CurrencyCode::BRL);
+        let txn = make_txn(
+            "t-brl",
+            "acc-002",
+            (2026, 3, 10),
+            dec!(-150.50),
+            CurrencyCode::BRL,
+        );
         repo.save(&txn).unwrap();
 
         let found = repo.find_by_id("t-brl").unwrap().unwrap();
@@ -426,7 +511,13 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let txn = make_txn("t1", "nonexistent-account", (2026, 3, 15), dec!(-10.00), CurrencyCode::USD);
+        let txn = make_txn(
+            "t1",
+            "nonexistent-account",
+            (2026, 3, 15),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        );
         assert!(repo.save(&txn).is_err());
     }
 
@@ -471,11 +562,23 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let mut t1 = make_txn("t1", "acc-001", (2026, 3, 15), dec!(-10.00), CurrencyCode::USD);
+        let mut t1 = make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        );
         t1.external_id = Some("shared-fitid".into());
         repo.save(&t1).unwrap();
 
-        let mut t2 = make_txn("t2", "acc-002", (2026, 3, 15), dec!(-20.00), CurrencyCode::BRL);
+        let mut t2 = make_txn(
+            "t2",
+            "acc-002",
+            (2026, 3, 15),
+            dec!(-20.00),
+            CurrencyCode::BRL,
+        );
         t2.external_id = Some("shared-fitid".into());
         repo.save(&t2).unwrap();
 
@@ -500,13 +603,25 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let mut t1 = make_txn("t1", "acc-001", (2026, 3, 15), dec!(-10.00), CurrencyCode::USD);
+        let mut t1 = make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        );
         t1.external_id = Some("dup".into());
         repo.save(&t1).unwrap();
 
         // Different PK but same (account_id, external_id) must be rejected by the
         // partial unique index from migration 002.
-        let mut t2 = make_txn("t2", "acc-001", (2026, 3, 16), dec!(-99.99), CurrencyCode::USD);
+        let mut t2 = make_txn(
+            "t2",
+            "acc-001",
+            (2026, 3, 16),
+            dec!(-99.99),
+            CurrencyCode::USD,
+        );
         t2.external_id = Some("dup".into());
         let err = repo.save(&t2).unwrap_err();
         assert!(matches!(err, DomainError::Storage(_)));
@@ -519,8 +634,20 @@ mod tests {
         let db = setup();
         let repo = SqliteTransactionRepository::new(&db);
 
-        let t1 = make_txn("t1", "acc-001", (2026, 3, 15), dec!(-10.00), CurrencyCode::USD);
-        let t2 = make_txn("t2", "acc-001", (2026, 3, 16), dec!(-20.00), CurrencyCode::USD);
+        let t1 = make_txn(
+            "t1",
+            "acc-001",
+            (2026, 3, 15),
+            dec!(-10.00),
+            CurrencyCode::USD,
+        );
+        let t2 = make_txn(
+            "t2",
+            "acc-001",
+            (2026, 3, 16),
+            dec!(-20.00),
+            CurrencyCode::USD,
+        );
         assert!(t1.external_id.is_none());
         assert!(t2.external_id.is_none());
 

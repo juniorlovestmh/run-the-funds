@@ -37,11 +37,7 @@ pub trait Importer {
     fn name(&self) -> &'static str;
 
     /// Parse `source` and return the transactions it contains.
-    fn import(
-        &self,
-        source: &Path,
-        account_id: &str,
-    ) -> Result<Vec<Transaction>, ImportError>;
+    fn import(&self, source: &Path, account_id: &str) -> Result<Vec<Transaction>, ImportError>;
 }
 
 #[derive(Debug, Error)]
@@ -57,7 +53,10 @@ pub enum ImportError {
     },
 
     #[error("failed to parse {format} file: {detail}")]
-    Parse { format: &'static str, detail: String },
+    Parse {
+        format: &'static str,
+        detail: String,
+    },
 
     #[error("unsupported format: {0}")]
     UnsupportedFormat(String),

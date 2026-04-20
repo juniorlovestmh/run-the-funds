@@ -124,10 +124,7 @@ impl<R: RuleRepository, T: TransactionRepository> CategorizationService<R, T> {
     /// internal money movements (e.g. Wise USD→BRL, Chase→Capital One). Sets
     /// `transfer_pair_id` on both sides. Idempotent — already-paired rows
     /// are excluded via `find_untagged`.
-    pub fn detect_transfers(
-        &self,
-        dry_run: bool,
-    ) -> Result<TransferPairingReport, DomainError> {
+    pub fn detect_transfers(&self, dry_run: bool) -> Result<TransferPairingReport, DomainError> {
         let untagged = self.txns.find_untagged()?;
 
         // Group by (currency, |amount|). Same-currency, same-magnitude pairs
@@ -151,8 +148,9 @@ impl<R: RuleRepository, T: TransactionRepository> CategorizationService<R, T> {
             group.sort_by_key(|t| (t.date, t.id.clone()));
 
             // Split into debits (negative) and credits (positive/zero).
-            let (mut debits, mut credits): (Vec<_>, Vec<_>) =
-                group.into_iter().partition(|t| t.amount.amount.is_sign_negative());
+            let (mut debits, mut credits): (Vec<_>, Vec<_>) = group
+                .into_iter()
+                .partition(|t| t.amount.amount.is_sign_negative());
 
             // Greedy pairing: for each debit, find the earliest credit from a
             // different account within the day-tolerance window.
@@ -359,7 +357,14 @@ mod tests {
     fn matching_rule_categorizes_transaction() {
         let (db, acc, food, _debt) = setup();
         seed_txn(&db, "t1", &acc, Some("Whole Foods Market"), dec!(-45));
-        seed_rule(&db, "Groceries", MatchField::Payee, "Whole Foods", &food, 100);
+        seed_rule(
+            &db,
+            "Groceries",
+            MatchField::Payee,
+            "Whole Foods",
+            &food,
+            100,
+        );
 
         let svc = service(&db);
         let report = svc.categorize(default_opts()).unwrap();
@@ -379,10 +384,30 @@ mod tests {
     #[test]
     fn higher_priority_rule_wins_when_multiple_match() {
         let (db, acc, food, debt) = setup();
-        seed_txn(&db, "t1", &acc, Some("Capital One Student Loan"), dec!(-149));
+        seed_txn(
+            &db,
+            "t1",
+            &acc,
+            Some("Capital One Student Loan"),
+            dec!(-149),
+        );
         // Both rules match; "Debt" has higher priority.
-        seed_rule(&db, "Generic Capital One", MatchField::Payee, "Capital One", &food, 50);
-        seed_rule(&db, "Student Loan", MatchField::Payee, "Student Loan", &debt, 200);
+        seed_rule(
+            &db,
+            "Generic Capital One",
+            MatchField::Payee,
+            "Capital One",
+            &food,
+            50,
+        );
+        seed_rule(
+            &db,
+            "Student Loan",
+            MatchField::Payee,
+            "Student Loan",
+            &debt,
+            200,
+        );
 
         let svc = service(&db);
         let report = svc.categorize(default_opts()).unwrap();
@@ -399,7 +424,14 @@ mod tests {
     fn dry_run_counts_but_does_not_write() {
         let (db, acc, food, _debt) = setup();
         seed_txn(&db, "t1", &acc, Some("Whole Foods"), dec!(-45));
-        seed_rule(&db, "Groceries", MatchField::Payee, "Whole Foods", &food, 100);
+        seed_rule(
+            &db,
+            "Groceries",
+            MatchField::Payee,
+            "Whole Foods",
+            &food,
+            100,
+        );
 
         let svc = service(&db);
         let report = svc
@@ -429,14 +461,24 @@ mod tests {
         SqliteTransactionRepository::new(&db).save(&t1).unwrap();
 
         // Rule that would assign t1 to Debt (different category).
-        seed_rule(&db, "Groceries", MatchField::Payee, "Whole Foods", &food, 100);
+        seed_rule(
+            &db,
+            "Groceries",
+            MatchField::Payee,
+            "Whole Foods",
+            &food,
+            100,
+        );
 
         let svc = service(&db);
 
         // Without reset, t1 is skipped (already categorized).
         let report = svc.categorize(default_opts()).unwrap();
         assert_eq!(report.categorized, 0);
-        assert_eq!(report.skipped, 0, "already-categorized rows aren't returned by find_uncategorized");
+        assert_eq!(
+            report.skipped, 0,
+            "already-categorized rows aren't returned by find_uncategorized"
+        );
 
         // With reset, t1 is cleared then re-categorized.
         let report = svc
@@ -455,7 +497,14 @@ mod tests {
         let (db, acc, _food, debt) = setup();
         seed_txn(&db, "t_big", &acc, Some("Big Withdrawal"), dec!(-5000));
         seed_txn(&db, "t_small", &acc, Some("Coffee"), dec!(-4.50));
-        seed_rule(&db, "Large outflows", MatchField::Amount, "<=-1000", &debt, 100);
+        seed_rule(
+            &db,
+            "Large outflows",
+            MatchField::Amount,
+            "<=-1000",
+            &debt,
+            100,
+        );
 
         let svc = service(&db);
         let report = svc.categorize(default_opts()).unwrap();
@@ -519,7 +568,14 @@ mod tests {
         seed_txn(&db, "t1", &acc, Some("Whole Foods"), dec!(-45));
         seed_txn(&db, "t2", &acc, Some("Whole Foods Market"), dec!(-99));
         seed_txn(&db, "t3", &acc, Some("Whole Foods #123"), dec!(-12));
-        seed_rule(&db, "Groceries", MatchField::Payee, "Whole Foods", &food, 100);
+        seed_rule(
+            &db,
+            "Groceries",
+            MatchField::Payee,
+            "Whole Foods",
+            &food,
+            100,
+        );
 
         let svc = service(&db);
         let report = svc.categorize(default_opts()).unwrap();

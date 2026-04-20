@@ -178,10 +178,10 @@ mod tests {
     use super::*;
     use crate::domain::account::{Account, AccountType};
     use crate::domain::currency::CurrencyCode;
-    use crate::infrastructure::sync_adapter::RemoteTransaction;
     use crate::infrastructure::storage::{
         Database, SqliteAccountRepository, SqliteTransactionRepository,
     };
+    use crate::infrastructure::sync_adapter::RemoteTransaction;
     use rust_decimal_macros::dec;
     use std::cell::RefCell;
 
@@ -241,14 +241,21 @@ mod tests {
         acc
     }
 
-    fn service(db: &Database) -> SyncService<SqliteTransactionRepository<'_>, SqliteAccountRepository<'_>> {
+    fn service(
+        db: &Database,
+    ) -> SyncService<SqliteTransactionRepository<'_>, SqliteAccountRepository<'_>> {
         SyncService::new(
             SqliteTransactionRepository::new(db),
             SqliteAccountRepository::new(db),
         )
     }
 
-    fn rtx(ext_id: &str, date: (i32, u32, u32), amount: rust_decimal::Decimal, currency: CurrencyCode) -> RemoteTransaction {
+    fn rtx(
+        ext_id: &str,
+        date: (i32, u32, u32),
+        amount: rust_decimal::Decimal,
+        currency: CurrencyCode,
+    ) -> RemoteTransaction {
         RemoteTransaction {
             external_id: ext_id.into(),
             date: NaiveDate::from_ymd_opt(date.0, date.1, date.2).unwrap(),
@@ -268,13 +275,24 @@ mod tests {
         assert_eq!(report.provider, "simplefin");
         assert_eq!(report.accounts_synced, 0);
         assert_eq!(report.imported, 0);
-        assert_eq!(*adapter.calls.borrow(), 0, "no adapter call when nothing linked");
+        assert_eq!(
+            *adapter.calls.borrow(),
+            0,
+            "no adapter call when nothing linked"
+        );
     }
 
     #[test]
     fn sync_persists_and_updates_last_sync_at() {
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
         let svc = service(&db);
 
         let adapter = FakeAdapter::new(vec![(
@@ -297,20 +315,37 @@ mod tests {
     #[test]
     fn sync_default_since_is_two_years_back() {
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
         let svc = service(&db);
         let adapter = FakeAdapter::new(vec![]);
         svc.sync_provider(&adapter, None).unwrap();
         let since = adapter.last_since.borrow().unwrap();
         let today = Utc::now().date_naive();
         let diff = (today - since).num_days();
-        assert!((725..=735).contains(&diff), "expected ~730 days, got {diff}");
+        assert!(
+            (725..=735).contains(&diff),
+            "expected ~730 days, got {diff}"
+        );
     }
 
     #[test]
     fn sync_since_override_wins_over_last_sync_at() {
         let db = setup_db();
-        let mut acc = make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
+        let mut acc = make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
         // Simulate a prior sync: last_sync_at = 2026-04-10.
         acc.mark_synced(
             NaiveDate::from_ymd_opt(2026, 4, 10)
@@ -332,15 +367,38 @@ mod tests {
     fn sync_only_persists_linked_external_accounts() {
         // Adapter returns 3 external accounts; only 2 are locally linked.
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
-        make_linked_account(&db, "acc-2", "Cap1", CurrencyCode::USD, "simplefin", "ext-2");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
+        make_linked_account(
+            &db,
+            "acc-2",
+            "Cap1",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-2",
+        );
         // ext-3 exists at the provider but isn't linked locally.
         let svc = service(&db);
 
         let adapter = FakeAdapter::new(vec![
-            ("ext-1".into(), vec![rtx("r1", (2026, 4, 1), dec!(-10.00), CurrencyCode::USD)]),
-            ("ext-2".into(), vec![rtx("r2", (2026, 4, 2), dec!(-20.00), CurrencyCode::USD)]),
-            ("ext-3".into(), vec![rtx("r3", (2026, 4, 3), dec!(-30.00), CurrencyCode::USD)]),
+            (
+                "ext-1".into(),
+                vec![rtx("r1", (2026, 4, 1), dec!(-10.00), CurrencyCode::USD)],
+            ),
+            (
+                "ext-2".into(),
+                vec![rtx("r2", (2026, 4, 2), dec!(-20.00), CurrencyCode::USD)],
+            ),
+            (
+                "ext-3".into(),
+                vec![rtx("r3", (2026, 4, 3), dec!(-30.00), CurrencyCode::USD)],
+            ),
         ]);
         let report = svc.sync_provider(&adapter, None).unwrap();
         assert_eq!(report.accounts_synced, 2);
@@ -356,7 +414,14 @@ mod tests {
         // but with a fake that returns the same static list, we need to
         // override `since` to let dedup run.)
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
         let svc = service(&db);
         let adapter = FakeAdapter::new(vec![(
             "ext-1".into(),
@@ -380,7 +445,14 @@ mod tests {
     fn sync_currency_mismatch_surfaces_as_error() {
         // Linked BRL account but adapter returns USD transactions.
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Nubank", CurrencyCode::BRL, "simplefin", "ext-1");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Nubank",
+            CurrencyCode::BRL,
+            "simplefin",
+            "ext-1",
+        );
         let svc = service(&db);
         let adapter = FakeAdapter::new(vec![(
             "ext-1".into(),
@@ -393,7 +465,14 @@ mod tests {
     #[test]
     fn sync_filters_transactions_before_effective_since() {
         let db = setup_db();
-        make_linked_account(&db, "acc-1", "Chase", CurrencyCode::USD, "simplefin", "ext-1");
+        make_linked_account(
+            &db,
+            "acc-1",
+            "Chase",
+            CurrencyCode::USD,
+            "simplefin",
+            "ext-1",
+        );
         let svc = service(&db);
 
         let override_date = NaiveDate::from_ymd_opt(2026, 4, 10).unwrap();

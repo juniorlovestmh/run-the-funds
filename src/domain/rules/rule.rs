@@ -50,7 +50,9 @@ impl FromStr for MatchField {
             "payee" => Ok(Self::Payee),
             "description" => Ok(Self::Description),
             "amount" => Ok(Self::Amount),
-            other => Err(format!("unknown match_field: {other} (expected payee|description|amount)")),
+            other => Err(format!(
+                "unknown match_field: {other} (expected payee|description|amount)"
+            )),
         }
     }
 }
@@ -79,7 +81,9 @@ impl FromStr for MatchKind {
         match s.to_lowercase().as_str() {
             "substring" => Ok(Self::Substring),
             "regex" => Ok(Self::Regex),
-            other => Err(format!("unknown match_kind: {other} (expected substring|regex)")),
+            other => Err(format!(
+                "unknown match_kind: {other} (expected substring|regex)"
+            )),
         }
     }
 }
@@ -111,10 +115,14 @@ impl Rule {
             return Err(DomainError::Validation("rule name is required".into()));
         }
         if match_pattern.trim().is_empty() {
-            return Err(DomainError::Validation("rule match_pattern is required".into()));
+            return Err(DomainError::Validation(
+                "rule match_pattern is required".into(),
+            ));
         }
         if category_id.trim().is_empty() {
-            return Err(DomainError::Validation("rule category_id is required".into()));
+            return Err(DomainError::Validation(
+                "rule category_id is required".into(),
+            ));
         }
 
         // Pre-validate the pattern shape so bad rules get rejected at
@@ -128,9 +136,7 @@ impl Rule {
                     // Wrap with (?i) so the stored pattern is what the user
                     // sees, but compilation is always case-insensitive.
                     regex::Regex::new(&format!("(?i){}", match_pattern)).map_err(|e| {
-                        DomainError::Validation(format!(
-                            "invalid regex `{match_pattern}`: {e}"
-                        ))
+                        DomainError::Validation(format!("invalid regex `{match_pattern}`: {e}"))
                     })?;
                 }
             }
@@ -151,14 +157,15 @@ impl Rule {
     }
 
     /// Does this rule match the given transaction?
-    pub fn matches(&self, payee: Option<&str>, description: Option<&str>, amount: &rust_decimal::Decimal) -> bool {
+    pub fn matches(
+        &self,
+        payee: Option<&str>,
+        description: Option<&str>,
+        amount: &rust_decimal::Decimal,
+    ) -> bool {
         match self.match_field {
-            MatchField::Payee => {
-                payee.is_some_and(|p| self.text_matches(p))
-            }
-            MatchField::Description => {
-                description.is_some_and(|d| self.text_matches(d))
-            }
+            MatchField::Payee => payee.is_some_and(|p| self.text_matches(p)),
+            MatchField::Description => description.is_some_and(|d| self.text_matches(d)),
             MatchField::Amount => {
                 // Amount patterns were validated in `new`; panic on bad
                 // patterns here would indicate a DB-level corruption.
@@ -171,9 +178,9 @@ impl Rule {
 
     fn text_matches(&self, haystack: &str) -> bool {
         match self.match_kind {
-            MatchKind::Substring => {
-                haystack.to_lowercase().contains(&self.match_pattern.to_lowercase())
-            }
+            MatchKind::Substring => haystack
+                .to_lowercase()
+                .contains(&self.match_pattern.to_lowercase()),
             MatchKind::Regex => {
                 // Re-compile here rather than caching on the struct — rule
                 // sets are small (dozens) and compiling once per categorize
@@ -262,11 +269,18 @@ mod tests {
 
     #[test]
     fn new_rule_validates_required_fields() {
-        assert!(Rule::new(
-            "r1".into(), "".into(),
-            MatchField::Payee, MatchKind::Substring,
-            "x".into(), "cat-1".into(), 100
-        ).is_err());
+        assert!(
+            Rule::new(
+                "r1".into(),
+                "".into(),
+                MatchField::Payee,
+                MatchKind::Substring,
+                "x".into(),
+                "cat-1".into(),
+                100
+            )
+            .is_err()
+        );
         assert!(mk_rule(MatchField::Payee, MatchKind::Substring, "").is_err());
     }
 
@@ -316,7 +330,12 @@ mod tests {
 
     #[test]
     fn description_field_matched_not_payee() {
-        let rule = mk_rule(MatchField::Description, MatchKind::Substring, "subscription").unwrap();
+        let rule = mk_rule(
+            MatchField::Description,
+            MatchKind::Substring,
+            "subscription",
+        )
+        .unwrap();
         assert!(rule.matches(Some("Netflix"), Some("monthly subscription"), &dec!(-9.99)));
         assert!(!rule.matches(Some("Netflix"), Some("one-time charge"), &dec!(-9.99)));
         // Even if payee matches, description is the field being looked at.
@@ -369,13 +388,19 @@ mod tests {
     #[test]
     fn match_field_from_str_accepts_lowercase() {
         assert_eq!(MatchField::from_str("payee").unwrap(), MatchField::Payee);
-        assert_eq!(MatchField::from_str("DESCRIPTION").unwrap(), MatchField::Description);
+        assert_eq!(
+            MatchField::from_str("DESCRIPTION").unwrap(),
+            MatchField::Description
+        );
         assert!(MatchField::from_str("bogus").is_err());
     }
 
     #[test]
     fn match_kind_from_str() {
-        assert_eq!(MatchKind::from_str("substring").unwrap(), MatchKind::Substring);
+        assert_eq!(
+            MatchKind::from_str("substring").unwrap(),
+            MatchKind::Substring
+        );
         assert_eq!(MatchKind::from_str("REGEX").unwrap(), MatchKind::Regex);
         assert!(MatchKind::from_str("glob").is_err());
     }

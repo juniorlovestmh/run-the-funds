@@ -26,14 +26,7 @@ fn main() {
                 owner,
                 institution,
             } => {
-                rtf::cli::accounts::handle_create(
-                    &db,
-                    name,
-                    r#type,
-                    currency,
-                    owner,
-                    institution,
-                );
+                rtf::cli::accounts::handle_create(&db, name, r#type, currency, owner, institution);
             }
             AccountCommands::List { format } => {
                 rtf::cli::accounts::handle_list(&db, format);

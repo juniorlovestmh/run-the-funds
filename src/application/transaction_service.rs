@@ -95,13 +95,13 @@ impl<T: TransactionRepository, A: AccountRepository> TransactionService<T, A> {
         account_id: &str,
         transactions: Vec<Transaction>,
     ) -> Result<ImportReport, DomainError> {
-        let account = self
-            .account_repo
-            .find_by_id(account_id)?
-            .ok_or_else(|| DomainError::NotFound {
-                entity: "Account".into(),
-                id: account_id.into(),
-            })?;
+        let account =
+            self.account_repo
+                .find_by_id(account_id)?
+                .ok_or_else(|| DomainError::NotFound {
+                    entity: "Account".into(),
+                    id: account_id.into(),
+                })?;
 
         for txn in &transactions {
             if txn.amount.currency != account.currency {
@@ -179,7 +179,9 @@ mod tests {
         db
     }
 
-    fn service(db: &Database) -> TransactionService<SqliteTransactionRepository<'_>, SqliteAccountRepository<'_>> {
+    fn service(
+        db: &Database,
+    ) -> TransactionService<SqliteTransactionRepository<'_>, SqliteAccountRepository<'_>> {
         TransactionService::new(
             SqliteTransactionRepository::new(db),
             SqliteAccountRepository::new(db),
@@ -249,7 +251,13 @@ mod tests {
         }
     }
 
-    fn make_txn(id: &str, account: &str, fitid: &str, amount: Decimal, currency: CurrencyCode) -> Transaction {
+    fn make_txn(
+        id: &str,
+        account: &str,
+        fitid: &str,
+        amount: Decimal,
+        currency: CurrencyCode,
+    ) -> Transaction {
         let mut t = Transaction::new(
             id.into(),
             account.into(),

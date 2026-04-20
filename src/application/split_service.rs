@@ -47,12 +47,13 @@ impl<T: TransactionRepository, S: TransactionSplitRepository> SplitService<T, S>
         }
 
         // Load the parent transaction.
-        let mut txn = self.txns.find_by_id(transaction_id)?.ok_or_else(|| {
-            DomainError::NotFound {
-                entity: "Transaction".into(),
-                id: transaction_id.into(),
-            }
-        })?;
+        let mut txn =
+            self.txns
+                .find_by_id(transaction_id)?
+                .ok_or_else(|| DomainError::NotFound {
+                    entity: "Transaction".into(),
+                    id: transaction_id.into(),
+                })?;
 
         // Validate: all splits share the transaction's currency.
         for a in &allocations {
@@ -210,7 +211,10 @@ mod tests {
         let err = svc
             .split_transaction(
                 &txn_id,
-                vec![alloc(&food, dec!(-100), None), alloc(&house, dec!(-10), None)],
+                vec![
+                    alloc(&food, dec!(-100), None),
+                    alloc(&house, dec!(-10), None),
+                ],
             )
             .unwrap_err();
         match err {
@@ -226,7 +230,10 @@ mod tests {
         // $150 total; $75.00 + $75.00 — exact; also try $74.995 + $75.005 boundary.
         svc.split_transaction(
             &txn_id,
-            vec![alloc(&food, dec!(-75.00), None), alloc(&house, dec!(-75.00), None)],
+            vec![
+                alloc(&food, dec!(-75.00), None),
+                alloc(&house, dec!(-75.00), None),
+            ],
         )
         .unwrap();
     }
@@ -268,7 +275,10 @@ mod tests {
         let err = svc
             .split_transaction(
                 "txn-ghost",
-                vec![alloc(&food, dec!(-100), None), alloc(&house, dec!(-50), None)],
+                vec![
+                    alloc(&food, dec!(-100), None),
+                    alloc(&house, dec!(-50), None),
+                ],
             )
             .unwrap_err();
         assert!(matches!(err, DomainError::NotFound { .. }));

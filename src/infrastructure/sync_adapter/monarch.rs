@@ -322,9 +322,8 @@ struct RawTxnTag {
 
 fn decimal_from_json(v: &serde_json::Value, field: &str) -> Result<Decimal, DomainError> {
     if let Some(n) = v.as_number() {
-        return Decimal::from_str(&n.to_string()).map_err(|e| {
-            DomainError::Import(format!("{field}: bad decimal '{n}': {e}"))
-        });
+        return Decimal::from_str(&n.to_string())
+            .map_err(|e| DomainError::Import(format!("{field}: bad decimal '{n}': {e}")));
     }
     if let Some(s) = v.as_str() {
         return Decimal::from_str(s)
@@ -617,13 +616,19 @@ mod tests {
         assert_eq!(accounts[0].display_name, "Chase Checking (...8332)");
         assert_eq!(accounts[0].account_type, "depository");
         assert_eq!(accounts[0].subtype, "checking");
-        assert_eq!(accounts[0].current_balance, Decimal::from_str("1648.39").unwrap());
+        assert_eq!(
+            accounts[0].current_balance,
+            Decimal::from_str("1648.39").unwrap()
+        );
         assert_eq!(accounts[0].institution_name.as_deref(), Some("Chase"));
         assert!(!accounts[0].is_manual);
         assert_eq!(accounts[1].external_id, "acc-2");
         assert_eq!(accounts[1].display_name, "BTC");
         assert!(accounts[1].is_manual);
-        assert_eq!(accounts[1].current_balance, Decimal::from_str("7719.78").unwrap());
+        assert_eq!(
+            accounts[1].current_balance,
+            Decimal::from_str("7719.78").unwrap()
+        );
     }
 
     #[test]
@@ -668,7 +673,10 @@ mod tests {
     #[test]
     fn fetch_transactions_single_page() {
         let page = txns_page(3, 0);
-        let runner = FakeRunner::new(vec![("transactions list", Box::leak(page.into_boxed_str()))]);
+        let runner = FakeRunner::new(vec![(
+            "transactions list",
+            Box::leak(page.into_boxed_str()),
+        )]);
         let adapter = MonarchAdapter::new(runner);
         let txns = adapter
             .fetch_transactions(
@@ -711,7 +719,10 @@ mod tests {
     fn fetch_transactions_stops_on_empty_page() {
         // Single page with fewer than 500 rows — pagination should not request a second page.
         let page = txns_page(7, 0);
-        let runner = FakeRunner::new(vec![("transactions list", Box::leak(page.into_boxed_str()))]);
+        let runner = FakeRunner::new(vec![(
+            "transactions list",
+            Box::leak(page.into_boxed_str()),
+        )]);
         let adapter = MonarchAdapter::new(runner);
         let txns = adapter
             .fetch_transactions(
@@ -761,7 +772,8 @@ mod tests {
         impl MmoneyRunner for BrokenRunner {
             fn run(&self, _args: &[&str]) -> Result<Vec<u8>, DomainError> {
                 Err(DomainError::Import(
-                    "failed to spawn mmoney at /bin/mmoney: not found. Is mmoney-cli installed?".into(),
+                    "failed to spawn mmoney at /bin/mmoney: not found. Is mmoney-cli installed?"
+                        .into(),
                 ))
             }
         }

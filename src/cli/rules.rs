@@ -49,7 +49,15 @@ pub fn handle_add(
     category_id: String,
     priority: Option<i64>,
 ) {
-    match add_rule(db, name, match_field, match_kind, pattern, category_id, priority) {
+    match add_rule(
+        db,
+        name,
+        match_field,
+        match_kind,
+        pattern,
+        category_id,
+        priority,
+    ) {
         Ok(rule) => {
             let view = RuleView::from(&rule);
             let response = CliResponse::ok(view);
@@ -242,59 +250,67 @@ mod tests {
     fn add_rule_rejects_unknown_match_field() {
         let db = Database::in_memory().unwrap();
         seed_category(&db);
-        assert!(add_rule(
-            &db,
-            "x".into(),
-            "bogus".into(),
-            None,
-            "p".into(),
-            "c1".into(),
-            None,
-        )
-        .is_err());
+        assert!(
+            add_rule(
+                &db,
+                "x".into(),
+                "bogus".into(),
+                None,
+                "p".into(),
+                "c1".into(),
+                None,
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn add_rule_rejects_unknown_category_via_fk() {
         let db = Database::in_memory().unwrap();
         // No seeded category → FK failure on save.
-        assert!(add_rule(
-            &db,
-            "x".into(),
-            "payee".into(),
-            None,
-            "p".into(),
-            "c-missing".into(),
-            None,
-        )
-        .is_err());
+        assert!(
+            add_rule(
+                &db,
+                "x".into(),
+                "payee".into(),
+                None,
+                "p".into(),
+                "c-missing".into(),
+                None,
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn add_rule_amount_pattern_validated() {
         let db = Database::in_memory().unwrap();
         seed_category(&db);
-        assert!(add_rule(
-            &db,
-            "Over $100".into(),
-            "amount".into(),
-            None,
-            ">100".into(),
-            "c1".into(),
-            None,
-        )
-        .is_ok());
+        assert!(
+            add_rule(
+                &db,
+                "Over $100".into(),
+                "amount".into(),
+                None,
+                ">100".into(),
+                "c1".into(),
+                None,
+            )
+            .is_ok()
+        );
         // Bogus amount pattern rejected at rule construction.
-        assert!(add_rule(
-            &db,
-            "bad".into(),
-            "amount".into(),
-            None,
-            "not-numeric".into(),
-            "c1".into(),
-            None,
-        )
-        .is_err());
+        assert!(
+            add_rule(
+                &db,
+                "bad".into(),
+                "amount".into(),
+                None,
+                "not-numeric".into(),
+                "c1".into(),
+                None,
+            )
+            .is_err()
+        );
     }
 
     #[test]

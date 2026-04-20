@@ -77,8 +77,8 @@ where
         since_override: Option<NaiveDate>,
     ) -> Result<MonarchSyncReport, DomainError> {
         let today = Utc::now().date_naive();
-        let since = since_override
-            .unwrap_or_else(|| today - chrono::Duration::days(DEFAULT_BACKFILL_DAYS));
+        let since =
+            since_override.unwrap_or_else(|| today - chrono::Duration::days(DEFAULT_BACKFILL_DAYS));
 
         // ---- Phase 1: taxonomy -----------------------------------------------
         // Order matters: groups before categories (categories FK groups), either
@@ -260,9 +260,9 @@ where
             };
 
             // Determine the fintrack txn id: reuse existing on (account, external) match.
-            let existing =
-                self.txn_repo
-                    .find_by_external_id(&local_account_id, &mt.external_id)?;
+            let existing = self
+                .txn_repo
+                .find_by_external_id(&local_account_id, &mt.external_id)?;
             let local_txn_id = existing
                 .as_ref()
                 .map(|e| e.id.clone())
@@ -278,10 +278,7 @@ where
             )?;
             t.external_id = Some(mt.external_id.clone());
             t.payee = mt.merchant_name.clone();
-            t.description = mt
-                .notes
-                .clone()
-                .or_else(|| mt.plaid_name.clone());
+            t.description = mt.notes.clone().or_else(|| mt.plaid_name.clone());
             t.imported_at = Some(sync_ts);
 
             // Resolve Monarch's category external id to fintrack's local id.
@@ -363,11 +360,11 @@ fn monarch_to_account_type(monarch_type: &str, subtype: &str) -> AccountType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::infrastructure::sync_adapter::monarch::MmoneyRunner;
     use crate::infrastructure::storage::{
         Database, SqliteAccountRepository, SqliteCategoryRepository, SqliteTagRepository,
         SqliteTransactionRepository,
     };
+    use crate::infrastructure::sync_adapter::monarch::MmoneyRunner;
     use std::cell::RefCell;
 
     struct FakeRunner {
@@ -487,10 +484,7 @@ mod tests {
         let svc = service(&db);
 
         let report = svc
-            .run(
-                &adapter,
-                Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-            )
+            .run(&adapter, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
             .unwrap();
         assert_eq!(report.category_groups_imported, 2);
         assert_eq!(report.categories_imported, 2);
@@ -559,11 +553,8 @@ mod tests {
             ),
         ]);
         let svc = service(&db);
-        svc.run(
-            &adapter,
-            Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-        )
-        .unwrap();
+        svc.run(&adapter, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
 
         // Find the transaction and confirm its category is the local id that
         // maps from Monarch's "c-groc", and its tags include the local "BR".
@@ -611,11 +602,8 @@ mod tests {
             ),
         ]);
         let svc = service(&db);
-        svc.run(
-            &adapter,
-            Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-        )
-        .unwrap();
+        svc.run(&adapter, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
         let category_id: Option<String> = db
             .conn()
             .query_row(
@@ -642,10 +630,7 @@ mod tests {
         ]);
         let svc = service(&db);
         let report = svc
-            .run(
-                &adapter,
-                Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-            )
+            .run(&adapter, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
             .unwrap();
         assert_eq!(report.transactions_imported, 0);
     }
@@ -662,11 +647,8 @@ mod tests {
             ("transactions list", &txns_json(&[])),
         ]);
         let svc = service(&db);
-        svc.run(
-            &first,
-            Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-        )
-        .unwrap();
+        svc.run(&first, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
 
         // Second sync: same external_id, different display name + balance.
         let updated_accounts = r#"{
@@ -690,11 +672,8 @@ mod tests {
             ("accounts list", updated_accounts),
             ("transactions list", &txns_json(&[])),
         ]);
-        svc.run(
-            &second,
-            Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()),
-        )
-        .unwrap();
+        svc.run(&second, Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
 
         let repo = SqliteAccountRepository::new(&db);
         let acc = repo
@@ -738,6 +717,9 @@ mod tests {
             monarch_to_account_type("vehicle", "car"),
             AccountType::Other
         );
-        assert_eq!(monarch_to_account_type("unknown_top", "wat"), AccountType::Other);
+        assert_eq!(
+            monarch_to_account_type("unknown_top", "wat"),
+            AccountType::Other
+        );
     }
 }

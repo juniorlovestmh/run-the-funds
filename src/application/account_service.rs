@@ -169,7 +169,10 @@ mod tests {
         assert!(svc.delete_account("nonexistent").is_err());
     }
 
-    fn create_unlinked(db: &crate::infrastructure::storage::Database, name: &str) -> crate::domain::account::Account {
+    fn create_unlinked(
+        db: &crate::infrastructure::storage::Database,
+        name: &str,
+    ) -> crate::domain::account::Account {
         let svc = AccountService::new(SqliteAccountRepository::new(db));
         svc.create_account(
             name.into(),
@@ -198,7 +201,8 @@ mod tests {
         let db = setup();
         let acc = create_unlinked(&db, "Chase");
         let svc = AccountService::new(SqliteAccountRepository::new(&db));
-        svc.link_account(&acc.id, "simplefin".into(), "ext-1".into(), false).unwrap();
+        svc.link_account(&acc.id, "simplefin".into(), "ext-1".into(), false)
+            .unwrap();
 
         let err = svc
             .link_account(&acc.id, "simplefin".into(), "ext-2".into(), false)
@@ -211,7 +215,8 @@ mod tests {
         let db = setup();
         let acc = create_unlinked(&db, "Chase");
         let svc = AccountService::new(SqliteAccountRepository::new(&db));
-        svc.link_account(&acc.id, "simplefin".into(), "ext-1".into(), false).unwrap();
+        svc.link_account(&acc.id, "simplefin".into(), "ext-1".into(), false)
+            .unwrap();
 
         let relinked = svc
             .link_account(&acc.id, "simplefin".into(), "ext-2".into(), true)

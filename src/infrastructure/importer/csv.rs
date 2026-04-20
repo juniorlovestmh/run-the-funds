@@ -45,11 +45,7 @@ impl Importer for CsvImporter {
         "csv"
     }
 
-    fn import(
-        &self,
-        _source: &Path,
-        _account_id: &str,
-    ) -> Result<Vec<Transaction>, ImportError> {
+    fn import(&self, _source: &Path, _account_id: &str) -> Result<Vec<Transaction>, ImportError> {
         Err(ImportError::NotImplemented("csv"))
     }
 }

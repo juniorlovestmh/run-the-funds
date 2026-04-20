@@ -46,13 +46,7 @@ pub fn handle_create(
     }
 }
 
-pub fn handle_link(
-    db: &Database,
-    id: String,
-    provider: String,
-    external_id: String,
-    force: bool,
-) {
+pub fn handle_link(db: &Database, id: String, provider: String, external_id: String, force: bool) {
     let provider_lower = provider.to_lowercase();
     if provider_lower != "simplefin" && provider_lower != "pluggy" && provider_lower != "teller" {
         print_error(&format!(

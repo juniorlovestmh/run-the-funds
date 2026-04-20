@@ -44,14 +44,26 @@ mod tests {
 
     #[test]
     fn parse_all_variants() {
-        assert_eq!("pending".parse::<TransactionStatus>().unwrap(), TransactionStatus::Pending);
-        assert_eq!("cleared".parse::<TransactionStatus>().unwrap(), TransactionStatus::Cleared);
-        assert_eq!("reconciled".parse::<TransactionStatus>().unwrap(), TransactionStatus::Reconciled);
+        assert_eq!(
+            "pending".parse::<TransactionStatus>().unwrap(),
+            TransactionStatus::Pending
+        );
+        assert_eq!(
+            "cleared".parse::<TransactionStatus>().unwrap(),
+            TransactionStatus::Cleared
+        );
+        assert_eq!(
+            "reconciled".parse::<TransactionStatus>().unwrap(),
+            TransactionStatus::Reconciled
+        );
     }
 
     #[test]
     fn parse_case_insensitive() {
-        assert_eq!("PENDING".parse::<TransactionStatus>().unwrap(), TransactionStatus::Pending);
+        assert_eq!(
+            "PENDING".parse::<TransactionStatus>().unwrap(),
+            TransactionStatus::Pending
+        );
     }
 
     #[test]
@@ -61,7 +73,11 @@ mod tests {
 
     #[test]
     fn serde_roundtrip() {
-        for variant in [TransactionStatus::Pending, TransactionStatus::Cleared, TransactionStatus::Reconciled] {
+        for variant in [
+            TransactionStatus::Pending,
+            TransactionStatus::Cleared,
+            TransactionStatus::Reconciled,
+        ] {
             let json = serde_json::to_string(&variant).unwrap();
             let deserialized: TransactionStatus = serde_json::from_str(&json).unwrap();
             assert_eq!(variant, deserialized);

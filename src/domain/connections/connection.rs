@@ -72,22 +72,13 @@ mod tests {
 
     #[test]
     fn new_rejects_empty_provider_and_external_id() {
-        assert!(ProviderConnection::new(
-            "c1".into(),
-            "".into(),
-            "x".into(),
-            "{}".into(),
-            None
-        )
-        .is_err());
-        assert!(ProviderConnection::new(
-            "c1".into(),
-            "teller".into(),
-            "".into(),
-            "{}".into(),
-            None
-        )
-        .is_err());
+        assert!(
+            ProviderConnection::new("c1".into(), "".into(), "x".into(), "{}".into(), None).is_err()
+        );
+        assert!(
+            ProviderConnection::new("c1".into(), "teller".into(), "".into(), "{}".into(), None)
+                .is_err()
+        );
     }
 
     #[test]

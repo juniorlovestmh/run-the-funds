@@ -141,9 +141,14 @@ pub fn handle_category_list(db: &Database, format: String) {
         let response = CliResponse::ok(&views);
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
     } else if views.is_empty() {
-        println!("No categories. Run `rtf categories create --name <name> --group-id <group>` to add one.");
+        println!(
+            "No categories. Run `rtf categories create --name <name> --group-id <group>` to add one."
+        );
     } else {
-        println!("{:<36}  {:<30}  {:<36}  {}", "ID", "Name", "Group ID", "Created");
+        println!(
+            "{:<36}  {:<30}  {:<36}  {}",
+            "ID", "Name", "Group ID", "Created"
+        );
         println!("{}", "-".repeat(120));
         for v in views {
             println!(

@@ -55,10 +55,7 @@ mod tests {
             expected: "USD".into(),
             got: "BRL".into(),
         };
-        assert_eq!(
-            err.to_string(),
-            "currency mismatch: expected USD, got BRL"
-        );
+        assert_eq!(err.to_string(), "currency mismatch: expected USD, got BRL");
     }
 
     #[test]

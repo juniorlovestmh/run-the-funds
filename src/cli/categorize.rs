@@ -11,9 +11,7 @@
 use serde::Serialize;
 
 use crate::application::{CategorizationService, CategorizeOptions};
-use crate::infrastructure::storage::{
-    Database, SqliteRuleRepository, SqliteTransactionRepository,
-};
+use crate::infrastructure::storage::{Database, SqliteRuleRepository, SqliteTransactionRepository};
 
 use super::response::{CliResponse, ErrorResponse};
 
@@ -37,7 +35,8 @@ pub fn handle_categorize(
     );
 
     let result = if detect_transfers {
-        svc.detect_transfers(dry_run).map(CategorizeOutput::Transfers)
+        svc.detect_transfers(dry_run)
+            .map(CategorizeOutput::Transfers)
     } else {
         let opts = CategorizeOptions {
             dry_run,

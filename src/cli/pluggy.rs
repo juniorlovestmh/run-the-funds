@@ -21,7 +21,7 @@ use crate::domain::connections::{ProviderConnection, ProviderConnectionRepositor
 use crate::domain::credentials::{ProviderCredentials, ProviderCredentialsRepository};
 use crate::domain::error::DomainError;
 use crate::infrastructure::connect::{
-    launch_browser, render_template, CallbackKind, ConnectServer,
+    CallbackKind, ConnectServer, launch_browser, render_template,
 };
 use crate::infrastructure::http::{HttpClient, UreqHttpClient};
 use crate::infrastructure::storage::{
@@ -58,7 +58,9 @@ fn store_app_creds(
         return Err(DomainError::Validation("--client-id is required".into()));
     }
     if client_secret.trim().is_empty() {
-        return Err(DomainError::Validation("--client-secret is required".into()));
+        return Err(DomainError::Validation(
+            "--client-secret is required".into(),
+        ));
     }
 
     let data = serde_json::json!({
@@ -89,10 +91,7 @@ pub fn handle_connect(db: &Database) {
     }
 }
 
-fn do_connect<C: HttpClient>(
-    db: &Database,
-    http: &C,
-) -> Result<serde_json::Value, DomainError> {
+fn do_connect<C: HttpClient>(db: &Database, http: &C) -> Result<serde_json::Value, DomainError> {
     // 1. Load per-app credentials.
     let (client_id, client_secret) = load_app_creds(db)?;
 
@@ -193,21 +192,14 @@ fn fetch_api_key<C: HttpClient>(
         .ok_or_else(|| DomainError::Import("Pluggy auth response missing 'apiKey'".into()))
 }
 
-fn fetch_connect_token<C: HttpClient>(
-    http: &C,
-    api_key: &str,
-) -> Result<String, DomainError> {
+fn fetch_connect_token<C: HttpClient>(http: &C, api_key: &str) -> Result<String, DomainError> {
     let response = http.post(
         &format!("{PLUGGY_API_BASE}/connect_token"),
         "{}",
-        &[
-            ("X-API-KEY", api_key),
-            ("Content-Type", "application/json"),
-        ],
+        &[("X-API-KEY", api_key), ("Content-Type", "application/json")],
     )?;
-    let parsed: Value = serde_json::from_str(&response).map_err(|e| {
-        DomainError::Import(format!("Pluggy connect_token JSON parse: {e}"))
-    })?;
+    let parsed: Value = serde_json::from_str(&response)
+        .map_err(|e| DomainError::Import(format!("Pluggy connect_token JSON parse: {e}")))?;
     parsed
         .get("accessToken")
         .and_then(|v| v.as_str())
@@ -336,8 +328,8 @@ mod tests {
 
     #[test]
     fn fetch_api_key_roundtrips() {
-        let http = FakeHttp::new()
-            .post_returns(&format!("{PLUGGY_API_BASE}/auth"), r#"{"apiKey":"kx"}"#);
+        let http =
+            FakeHttp::new().post_returns(&format!("{PLUGGY_API_BASE}/auth"), r#"{"apiKey":"kx"}"#);
         let key = fetch_api_key(&http, "cid", "csec").unwrap();
         assert_eq!(key, "kx");
     }

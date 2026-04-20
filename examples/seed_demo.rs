@@ -15,8 +15,8 @@ use std::env;
 use std::str::FromStr;
 
 use chrono::{Datelike, Duration, NaiveDate, Utc};
-use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 use uuid::Uuid;
@@ -108,16 +108,16 @@ struct SeedGroups {
 
 fn seed_groups(repo: &SqliteCategoryRepository) -> Result<SeedGroups, Box<dyn std::error::Error>> {
     let groups = [
-        ("income",    "Income"),
-        ("food",      "Food & Dining"),
-        ("shopping",  "Shopping"),
+        ("income", "Income"),
+        ("food", "Food & Dining"),
+        ("shopping", "Shopping"),
         ("transport", "Auto & Transport"),
-        ("bills",     "Bills & Utilities"),
-        ("housing",   "Housing"),
-        ("health",    "Health & Wellness"),
+        ("bills", "Bills & Utilities"),
+        ("housing", "Housing"),
+        ("health", "Health & Wellness"),
         ("education", "Education"),
-        ("travel",    "Travel & Lifestyle"),
-        ("family",    "Family & Kids"),
+        ("travel", "Travel & Lifestyle"),
+        ("family", "Family & Kids"),
         ("transfers", "Transfers"),
     ];
     let mut ids = std::collections::HashMap::new();
@@ -127,16 +127,16 @@ fn seed_groups(repo: &SqliteCategoryRepository) -> Result<SeedGroups, Box<dyn st
         ids.insert(key, g.id);
     }
     Ok(SeedGroups {
-        income:    ids.remove("income").unwrap(),
-        food:      ids.remove("food").unwrap(),
-        shopping:  ids.remove("shopping").unwrap(),
+        income: ids.remove("income").unwrap(),
+        food: ids.remove("food").unwrap(),
+        shopping: ids.remove("shopping").unwrap(),
         transport: ids.remove("transport").unwrap(),
-        bills:     ids.remove("bills").unwrap(),
-        housing:   ids.remove("housing").unwrap(),
-        health:    ids.remove("health").unwrap(),
+        bills: ids.remove("bills").unwrap(),
+        housing: ids.remove("housing").unwrap(),
+        health: ids.remove("health").unwrap(),
         education: ids.remove("education").unwrap(),
-        travel:    ids.remove("travel").unwrap(),
-        family:    ids.remove("family").unwrap(),
+        travel: ids.remove("travel").unwrap(),
+        family: ids.remove("family").unwrap(),
         transfers: ids.remove("transfers").unwrap(),
     })
 }
@@ -180,29 +180,29 @@ fn seed_categories(
         Ok(c.id)
     };
     Ok(SeedCats {
-        paychecks:     save("Paychecks",            &g.income)?,
-        interest:      save("Interest",             &g.income)?,
-        groceries:     save("Groceries",            &g.food)?,
-        restaurants:   save("Restaurants & Bars",   &g.food)?,
-        coffee:        save("Coffee Shops",         &g.food)?,
-        clothing:      save("Clothing",             &g.shopping)?,
-        household:     save("Household",            &g.shopping)?,
-        gas:           save("Gas",                  &g.transport)?,
-        rideshare:     save("Rideshare",            &g.transport)?,
-        phone:         save("Phone",                &g.bills)?,
-        internet:      save("Internet",             &g.bills)?,
-        subscriptions: save("Subscriptions",        &g.bills)?,
-        rent:          save("Rent",                 &g.housing)?,
-        medical:       save("Medical",              &g.health)?,
-        pharmacy:      save("Pharmacy",             &g.health)?,
-        fitness:       save("Fitness",              &g.health)?,
-        student_loans: save("Student Loans",        &g.education)?,
-        travel:        save("Travel & Vacation",    &g.travel)?,
-        entertainment: save("Entertainment",        &g.travel)?,
-        kids:          save("Kids",                 &g.family)?,
-        transfer:      save("Transfer",             &g.transfers)?,
-        cc_payment:    save("Credit Card Payment",  &g.transfers)?,
-        buy:           save("Buy",                  &g.transfers)?,
+        paychecks: save("Paychecks", &g.income)?,
+        interest: save("Interest", &g.income)?,
+        groceries: save("Groceries", &g.food)?,
+        restaurants: save("Restaurants & Bars", &g.food)?,
+        coffee: save("Coffee Shops", &g.food)?,
+        clothing: save("Clothing", &g.shopping)?,
+        household: save("Household", &g.shopping)?,
+        gas: save("Gas", &g.transport)?,
+        rideshare: save("Rideshare", &g.transport)?,
+        phone: save("Phone", &g.bills)?,
+        internet: save("Internet", &g.bills)?,
+        subscriptions: save("Subscriptions", &g.bills)?,
+        rent: save("Rent", &g.housing)?,
+        medical: save("Medical", &g.health)?,
+        pharmacy: save("Pharmacy", &g.health)?,
+        fitness: save("Fitness", &g.health)?,
+        student_loans: save("Student Loans", &g.education)?,
+        travel: save("Travel & Vacation", &g.travel)?,
+        entertainment: save("Entertainment", &g.travel)?,
+        kids: save("Kids", &g.family)?,
+        transfer: save("Transfer", &g.transfers)?,
+        cc_payment: save("Credit Card Payment", &g.transfers)?,
+        buy: save("Buy", &g.transfers)?,
     })
 }
 
@@ -224,11 +224,11 @@ fn seed_tags(repo: &SqliteTagRepository) -> Result<SeedTags, Box<dyn std::error:
         Ok(t.id)
     };
     Ok(SeedTags {
-        joint:         mk("Joint")?,
-        spouse:        mk("For Spouse")?,
-        kids:          mk("For Kids")?,
-        subscription:  mk("Subscription")?,
-        cross_border:  mk("Cross-Border")?,
+        joint: mk("Joint")?,
+        spouse: mk("For Spouse")?,
+        kids: mk("For Kids")?,
+        subscription: mk("Subscription")?,
+        cross_border: mk("Cross-Border")?,
         work_reimburse: mk("Work Reimbursable")?,
     })
 }
@@ -236,23 +236,27 @@ fn seed_tags(repo: &SqliteTagRepository) -> Result<SeedTags, Box<dyn std::error:
 // ---- accounts -----------------------------------------------------------
 
 struct SeedAccounts {
-    checking:   String,
-    savings:    String,
-    rewards:    String,
-    everyday:   String,
-    brokerage:  String,
-    roth:       String,
-    crypto:     String,
-    fx_wallet:  String,
-    loan:       String,
-    brl:        String,
+    checking: String,
+    savings: String,
+    rewards: String,
+    everyday: String,
+    brokerage: String,
+    roth: String,
+    crypto: String,
+    fx_wallet: String,
+    loan: String,
+    brl: String,
 }
 
 fn seed_accounts(
     repo: &SqliteAccountRepository,
 ) -> Result<SeedAccounts, Box<dyn std::error::Error>> {
-    let mut mk = |name: &str, t: AccountType, c: CurrencyCode, inst: Option<&str>, balance: &str|
-        -> Result<String, Box<dyn std::error::Error>> {
+    let mut mk = |name: &str,
+                  t: AccountType,
+                  c: CurrencyCode,
+                  inst: Option<&str>,
+                  balance: &str|
+     -> Result<String, Box<dyn std::error::Error>> {
         let mut a = Account::new(
             Uuid::new_v4().to_string(),
             name.into(),
@@ -266,27 +270,87 @@ fn seed_accounts(
         Ok(a.id)
     };
     Ok(SeedAccounts {
-        checking:  mk("Primary Checking",    AccountType::Checking,   CurrencyCode::USD, Some("Atlas Bank"),       "4312.88")?,
-        savings:   mk("High-Yield Savings",  AccountType::Savings,    CurrencyCode::USD, Some("Atlas Bank"),       "18204.50")?,
-        rewards:   mk("Rewards Card",        AccountType::CreditCard, CurrencyCode::USD, Some("Northline Cards"),  "-1842.19")?,
-        everyday:  mk("Everyday Card",       AccountType::CreditCard, CurrencyCode::USD, Some("Northline Cards"),  "-230.44")?,
-        brokerage: mk("Taxable Brokerage",   AccountType::Brokerage,  CurrencyCode::USD, Some("Meridian Invest"),  "7410.22")?,
-        roth:      mk("Roth IRA",            AccountType::Brokerage,  CurrencyCode::USD, Some("Meridian Invest"),  "912.60")?,
-        crypto:    mk("Crypto Wallet",       AccountType::Brokerage,  CurrencyCode::USD, Some("Demo Exchange"),    "2581.93")?,
-        fx_wallet: mk("Cross-Border Wallet", AccountType::Checking,   CurrencyCode::USD, Some("Demo FX"),          "120.00")?,
-        loan:      mk("Student Loans",       AccountType::Loan,       CurrencyCode::USD, Some("Demo Loan Svcs"),   "-5983.11")?,
-        brl:       mk("BRL Checking",        AccountType::Checking,   CurrencyCode::BRL, Some("Demo BR Bank"),     "1230.55")?,
+        checking: mk(
+            "Primary Checking",
+            AccountType::Checking,
+            CurrencyCode::USD,
+            Some("Atlas Bank"),
+            "4312.88",
+        )?,
+        savings: mk(
+            "High-Yield Savings",
+            AccountType::Savings,
+            CurrencyCode::USD,
+            Some("Atlas Bank"),
+            "18204.50",
+        )?,
+        rewards: mk(
+            "Rewards Card",
+            AccountType::CreditCard,
+            CurrencyCode::USD,
+            Some("Northline Cards"),
+            "-1842.19",
+        )?,
+        everyday: mk(
+            "Everyday Card",
+            AccountType::CreditCard,
+            CurrencyCode::USD,
+            Some("Northline Cards"),
+            "-230.44",
+        )?,
+        brokerage: mk(
+            "Taxable Brokerage",
+            AccountType::Brokerage,
+            CurrencyCode::USD,
+            Some("Meridian Invest"),
+            "7410.22",
+        )?,
+        roth: mk(
+            "Roth IRA",
+            AccountType::Brokerage,
+            CurrencyCode::USD,
+            Some("Meridian Invest"),
+            "912.60",
+        )?,
+        crypto: mk(
+            "Crypto Wallet",
+            AccountType::Brokerage,
+            CurrencyCode::USD,
+            Some("Demo Exchange"),
+            "2581.93",
+        )?,
+        fx_wallet: mk(
+            "Cross-Border Wallet",
+            AccountType::Checking,
+            CurrencyCode::USD,
+            Some("Demo FX"),
+            "120.00",
+        )?,
+        loan: mk(
+            "Student Loans",
+            AccountType::Loan,
+            CurrencyCode::USD,
+            Some("Demo Loan Svcs"),
+            "-5983.11",
+        )?,
+        brl: mk(
+            "BRL Checking",
+            AccountType::Checking,
+            CurrencyCode::BRL,
+            Some("Demo BR Bank"),
+            "1230.55",
+        )?,
     })
 }
 
 // ---- rules --------------------------------------------------------------
 
-fn seed_rules(
-    repo: &SqliteRuleRepository,
-    c: &SeedCats,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut mk = |name: &str, pattern: &str, category_id: &str, priority: i64|
-        -> Result<(), Box<dyn std::error::Error>> {
+fn seed_rules(repo: &SqliteRuleRepository, c: &SeedCats) -> Result<(), Box<dyn std::error::Error>> {
+    let mut mk = |name: &str,
+                  pattern: &str,
+                  category_id: &str,
+                  priority: i64|
+     -> Result<(), Box<dyn std::error::Error>> {
         let r = Rule::new(
             Uuid::new_v4().to_string(),
             name.into(),
@@ -299,26 +363,26 @@ fn seed_rules(
         repo.save(&r)?;
         Ok(())
     };
-    mk("Rideshare A",       "Uber Demo",         &c.rideshare,     100)?;
-    mk("Rideshare B",       "MetroTaxi",         &c.rideshare,     100)?;
-    mk("Groceries Chain 1", "Green Market",      &c.groceries,     100)?;
-    mk("Groceries Chain 2", "Fresh Pantry",      &c.groceries,     100)?;
-    mk("Groceries BR",      "Mercado Demo",      &c.groceries,     100)?;
-    mk("Cafe",              "Corner Cafe",       &c.coffee,        100)?;
-    mk("Restaurant",        "Downtown Bistro",   &c.restaurants,   100)?;
-    mk("Subscription Svc",  "StreamFlix",        &c.subscriptions, 100)?;
-    mk("AI Assistant",      "CodeGen Pro",       &c.subscriptions, 100)?;
-    mk("Phone Bill",        "Demo Phone Co",     &c.phone,         100)?;
-    mk("Internet Bill",     "Demo Net Co",       &c.internet,      100)?;
-    mk("Pharmacy",          "Demo Pharmacy",     &c.pharmacy,      100)?;
-    mk("Gym",               "Demo Gym",          &c.fitness,       100)?;
-    mk("Payroll",           "Demo Payroll",      &c.paychecks,     100)?;
-    mk("Interest",          "Monthly Interest",  &c.interest,      100)?;
-    mk("Student Loan",      "Demo Loan Svcs",    &c.student_loans, 100)?;
-    mk("Card Payment",      "Northline Payment", &c.cc_payment,    100)?;
-    mk("Transfer Out",      "Demo FX Send",      &c.transfer,      100)?;
-    mk("Rent",              "Demo Landlord",     &c.rent,          100)?;
-    mk("Kids School",       "Demo School",       &c.kids,          100)?;
+    mk("Rideshare A", "Uber Demo", &c.rideshare, 100)?;
+    mk("Rideshare B", "MetroTaxi", &c.rideshare, 100)?;
+    mk("Groceries Chain 1", "Green Market", &c.groceries, 100)?;
+    mk("Groceries Chain 2", "Fresh Pantry", &c.groceries, 100)?;
+    mk("Groceries BR", "Mercado Demo", &c.groceries, 100)?;
+    mk("Cafe", "Corner Cafe", &c.coffee, 100)?;
+    mk("Restaurant", "Downtown Bistro", &c.restaurants, 100)?;
+    mk("Subscription Svc", "StreamFlix", &c.subscriptions, 100)?;
+    mk("AI Assistant", "CodeGen Pro", &c.subscriptions, 100)?;
+    mk("Phone Bill", "Demo Phone Co", &c.phone, 100)?;
+    mk("Internet Bill", "Demo Net Co", &c.internet, 100)?;
+    mk("Pharmacy", "Demo Pharmacy", &c.pharmacy, 100)?;
+    mk("Gym", "Demo Gym", &c.fitness, 100)?;
+    mk("Payroll", "Demo Payroll", &c.paychecks, 100)?;
+    mk("Interest", "Monthly Interest", &c.interest, 100)?;
+    mk("Student Loan", "Demo Loan Svcs", &c.student_loans, 100)?;
+    mk("Card Payment", "Northline Payment", &c.cc_payment, 100)?;
+    mk("Transfer Out", "Demo FX Send", &c.transfer, 100)?;
+    mk("Rent", "Demo Landlord", &c.rent, 100)?;
+    mk("Kids School", "Demo School", &c.kids, 100)?;
     Ok(())
 }
 
@@ -416,20 +480,40 @@ fn seed_transactions(
 
     // --- Monthly bills (phone, internet, subscriptions, rent, student loan, gym) ---
     let recurring: Vec<(u32, &str, f64, &str, Vec<&str>)> = vec![
-        (3,  "Demo Phone Co",     62.00, &c.phone,         vec![&t.joint]),
-        (7,  "Demo Net Co",       89.99, &c.internet,      vec![&t.joint]),
-        (10, "StreamFlix",        15.99, &c.subscriptions, vec![&t.subscription, &t.joint]),
-        (10, "CodeGen Pro",       20.00, &c.subscriptions, vec![&t.subscription]),
-        (12, "MusicBox",           9.99, &c.subscriptions, vec![&t.subscription]),
-        (15, "Demo Gym",          79.00, &c.fitness,       vec![&t.joint]),
-        (1,  "Demo Landlord",   1850.00, &c.rent,          vec![&t.joint]),
-        (20, "Demo Loan Svcs",    93.26, &c.student_loans, vec![]),
-        (5,  "Demo School",      260.00, &c.kids,          vec![&t.kids]),
+        (3, "Demo Phone Co", 62.00, &c.phone, vec![&t.joint]),
+        (7, "Demo Net Co", 89.99, &c.internet, vec![&t.joint]),
+        (
+            10,
+            "StreamFlix",
+            15.99,
+            &c.subscriptions,
+            vec![&t.subscription, &t.joint],
+        ),
+        (
+            10,
+            "CodeGen Pro",
+            20.00,
+            &c.subscriptions,
+            vec![&t.subscription],
+        ),
+        (
+            12,
+            "MusicBox",
+            9.99,
+            &c.subscriptions,
+            vec![&t.subscription],
+        ),
+        (15, "Demo Gym", 79.00, &c.fitness, vec![&t.joint]),
+        (1, "Demo Landlord", 1850.00, &c.rent, vec![&t.joint]),
+        (20, "Demo Loan Svcs", 93.26, &c.student_loans, vec![]),
+        (5, "Demo School", 260.00, &c.kids, vec![&t.kids]),
     ];
     for (day_of_month, payee, amt, cat, tag_refs) in recurring {
         let mut month_start = NaiveDate::from_ymd_opt(start.year(), start.month(), 1).unwrap();
         while month_start <= today {
-            if let Some(d) = NaiveDate::from_ymd_opt(month_start.year(), month_start.month(), day_of_month) {
+            if let Some(d) =
+                NaiveDate::from_ymd_opt(month_start.year(), month_start.month(), day_of_month)
+            {
                 if d >= start && d <= today {
                     mk(
                         d,
@@ -450,19 +534,25 @@ fn seed_transactions(
 
     // --- Variable daily spending on the Rewards Card ---
     let merchants: Vec<(&str, f64, f64, &str, Vec<&str>)> = vec![
-        ("Uber Demo",       6.0,  18.0, &c.rideshare,     vec![]),
-        ("MetroTaxi",       8.0,  22.0, &c.rideshare,     vec![]),
-        ("Corner Cafe",     3.5,   9.0, &c.coffee,        vec![]),
-        ("Downtown Bistro", 18.0, 72.0, &c.restaurants,   vec![]),
-        ("Pizza Time",      14.0, 38.0, &c.restaurants,   vec![]),
-        ("Green Market",    22.0, 120.0, &c.groceries,    vec![&t.joint]),
-        ("Fresh Pantry",    18.0,  95.0, &c.groceries,    vec![&t.joint]),
-        ("Mercado Demo",    14.0,  85.0, &c.groceries,    vec![&t.joint, &t.cross_border]),
-        ("Demo Pharmacy",   12.0,  65.0, &c.pharmacy,     vec![]),
-        ("Style Outlet",    25.0, 180.0, &c.clothing,     vec![]),
-        ("HomeGoods Co",    28.0, 210.0, &c.household,    vec![&t.joint]),
-        ("StationFill",     28.0,  55.0, &c.gas,          vec![]),
-        ("CineRoom",         9.0,  26.0, &c.entertainment, vec![]),
+        ("Uber Demo", 6.0, 18.0, &c.rideshare, vec![]),
+        ("MetroTaxi", 8.0, 22.0, &c.rideshare, vec![]),
+        ("Corner Cafe", 3.5, 9.0, &c.coffee, vec![]),
+        ("Downtown Bistro", 18.0, 72.0, &c.restaurants, vec![]),
+        ("Pizza Time", 14.0, 38.0, &c.restaurants, vec![]),
+        ("Green Market", 22.0, 120.0, &c.groceries, vec![&t.joint]),
+        ("Fresh Pantry", 18.0, 95.0, &c.groceries, vec![&t.joint]),
+        (
+            "Mercado Demo",
+            14.0,
+            85.0,
+            &c.groceries,
+            vec![&t.joint, &t.cross_border],
+        ),
+        ("Demo Pharmacy", 12.0, 65.0, &c.pharmacy, vec![]),
+        ("Style Outlet", 25.0, 180.0, &c.clothing, vec![]),
+        ("HomeGoods Co", 28.0, 210.0, &c.household, vec![&t.joint]),
+        ("StationFill", 28.0, 55.0, &c.gas, vec![]),
+        ("CineRoom", 9.0, 26.0, &c.entertainment, vec![]),
     ];
     let mut d = start;
     while d <= today {
@@ -488,10 +578,10 @@ fn seed_transactions(
 
     // --- Everyday Card: lower volume ---
     let low_merchants: Vec<(&str, f64, f64, &str)> = vec![
-        ("SubShop",         8.0, 20.0, &c.restaurants),
-        ("Bagel Point",     6.0, 14.0, &c.coffee),
-        ("Kids Store",     22.0, 80.0, &c.kids),
-        ("Office Plus",    18.0, 65.0, &c.household),
+        ("SubShop", 8.0, 20.0, &c.restaurants),
+        ("Bagel Point", 6.0, 14.0, &c.coffee),
+        ("Kids Store", 22.0, 80.0, &c.kids),
+        ("Office Plus", 18.0, 65.0, &c.household),
     ];
     let mut d = start;
     while d <= today {
@@ -520,11 +610,11 @@ fn seed_transactions(
 
     // --- BRL merchant activity on the BRL account (some uncategorized to show off "needs review") ---
     let brl_merchants: Vec<(&str, f64, f64, Option<&str>)> = vec![
-        ("Mercado Demo",       25.0, 180.0, Some(&c.groceries)),
-        ("Padaria Demo",        8.0,  35.0, None),
-        ("Farmácia Demo",      15.0,  80.0, Some(&c.pharmacy)),
-        ("Posto Demo Gas",     80.0, 250.0, Some(&c.gas)),
-        ("Restaurante Demo",   30.0, 120.0, Some(&c.restaurants)),
+        ("Mercado Demo", 25.0, 180.0, Some(&c.groceries)),
+        ("Padaria Demo", 8.0, 35.0, None),
+        ("Farmácia Demo", 15.0, 80.0, Some(&c.pharmacy)),
+        ("Posto Demo Gas", 80.0, 250.0, Some(&c.gas)),
+        ("Restaurante Demo", 30.0, 120.0, Some(&c.restaurants)),
     ];
     let mut d = start;
     while d <= today {
@@ -552,7 +642,9 @@ fn seed_transactions(
         if let Some(d) = NaiveDate::from_ymd_opt(month_start.year(), month_start.month(), 25) {
             if d >= start && d <= today {
                 let pair = Uuid::new_v4().to_string();
-                let amt = Decimal::from_f64(800.0 + rng.random::<f64>() * 400.0).unwrap().round_dp(2);
+                let amt = Decimal::from_f64(800.0 + rng.random::<f64>() * 400.0)
+                    .unwrap()
+                    .round_dp(2);
                 mk(
                     d,
                     &a.checking,
@@ -585,7 +677,10 @@ fn seed_transactions(
     let mut d = start;
     let mut q = 0;
     while d <= today {
-        if d.day() == 15 && (d.month() == 1 || d.month() == 4 || d.month() == 7 || d.month() == 10) && q >= 0 {
+        if d.day() == 15
+            && (d.month() == 1 || d.month() == 4 || d.month() == 7 || d.month() == 10)
+            && q >= 0
+        {
             let pair = Uuid::new_v4().to_string();
             mk(
                 d,

@@ -46,9 +46,8 @@ impl ConnectServer {
     /// shuts down as soon as a terminal (Success/Failure/Exit) POST arrives
     /// — or when `timeout_secs` elapses, whichever comes first.
     pub fn bind() -> Result<Self, DomainError> {
-        let server = tiny_http::Server::http("127.0.0.1:0").map_err(|e| {
-            DomainError::Import(format!("connect server bind 127.0.0.1:0: {e}"))
-        })?;
+        let server = tiny_http::Server::http("127.0.0.1:0")
+            .map_err(|e| DomainError::Import(format!("connect server bind 127.0.0.1:0: {e}")))?;
         let port = server
             .server_addr()
             .to_ip()
@@ -104,7 +103,9 @@ impl ConnectServer {
                 (tiny_http::Method::Get, "/") => {
                     let response = tiny_http::Response::from_string(html_page.to_string())
                         .with_header(
-                            "Content-Type: text/html; charset=utf-8".parse::<tiny_http::Header>().unwrap(),
+                            "Content-Type: text/html; charset=utf-8"
+                                .parse::<tiny_http::Header>()
+                                .unwrap(),
                         );
                     let _ = request.respond(response);
                 }
@@ -125,7 +126,9 @@ impl ConnectServer {
                         "<html><body><p>You can close this tab.</p></body></html>",
                     )
                     .with_header(
-                        "Content-Type: text/html; charset=utf-8".parse::<tiny_http::Header>().unwrap(),
+                        "Content-Type: text/html; charset=utf-8"
+                            .parse::<tiny_http::Header>()
+                            .unwrap(),
                     );
                     let _ = request.respond(tab_closer);
                     return Ok(CapturedCallback { kind, body });
@@ -143,9 +146,7 @@ impl ConnectServer {
 /// Never errors — falls back silently to the stderr hint.
 pub fn launch_browser(url: &str) {
     if webbrowser::open(url).is_err() {
-        eprintln!(
-            "Could not auto-launch a browser. Open this URL manually: {url}"
-        );
+        eprintln!("Could not auto-launch a browser. Open this URL manually: {url}");
     }
 }
 

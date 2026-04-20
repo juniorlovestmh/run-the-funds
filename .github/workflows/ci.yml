@@ -33,7 +33,6 @@ jobs:
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
-        continue-on-error: true   # formatting is not currently enforced; warn only
 
       - name: cargo build
         run: cargo build --all-targets --locked

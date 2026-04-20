@@ -35,15 +35,15 @@ impl<'a, C: HttpClient> SimpleFinAdapter<'a, C> {
     /// `(base_url_without_creds, user, pass)`. Returns an Import error if
     /// the URL is malformed or missing credentials.
     fn split_access_url(access_url: &str) -> Result<(String, String, String), DomainError> {
-        let (scheme, rest) = access_url
-            .split_once("://")
-            .ok_or_else(|| DomainError::Import(format!("SimpleFIN access URL missing scheme: {access_url}")))?;
-        let (userinfo, host_and_path) = rest
-            .split_once('@')
-            .ok_or_else(|| DomainError::Import("SimpleFIN access URL missing user:pass@host".into()))?;
-        let (user, pass) = userinfo
-            .split_once(':')
-            .ok_or_else(|| DomainError::Import("SimpleFIN access URL userinfo must be user:pass".into()))?;
+        let (scheme, rest) = access_url.split_once("://").ok_or_else(|| {
+            DomainError::Import(format!("SimpleFIN access URL missing scheme: {access_url}"))
+        })?;
+        let (userinfo, host_and_path) = rest.split_once('@').ok_or_else(|| {
+            DomainError::Import("SimpleFIN access URL missing user:pass@host".into())
+        })?;
+        let (user, pass) = userinfo.split_once(':').ok_or_else(|| {
+            DomainError::Import("SimpleFIN access URL userinfo must be user:pass".into())
+        })?;
         Ok((
             format!("{scheme}://{host_and_path}"),
             user.to_string(),
@@ -54,18 +54,12 @@ impl<'a, C: HttpClient> SimpleFinAdapter<'a, C> {
     fn build_accounts_url(base: &str, since: NaiveDate) -> String {
         // SimpleFIN's start-date is a unix timestamp (seconds). We use the
         // UTC midnight of the queried date as a deterministic boundary.
-        let start_ts = since
-            .and_hms_opt(0, 0, 0)
-            .unwrap()
-            .and_utc()
-            .timestamp();
+        let start_ts = since.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp();
         let sep = if base.contains('?') { '&' } else { '?' };
         format!("{base}/accounts{sep}start-date={start_ts}&pending=0")
     }
 
-    fn parse_body(
-        body: &str,
-    ) -> Result<Vec<(String, Vec<RemoteTransaction>)>, DomainError> {
+    fn parse_body(body: &str) -> Result<Vec<(String, Vec<RemoteTransaction>)>, DomainError> {
         let parsed: Value = serde_json::from_str(body)
             .map_err(|e| DomainError::Import(format!("SimpleFIN JSON parse: {e}")))?;
 
@@ -91,12 +85,11 @@ impl<'a, C: HttpClient> SimpleFinAdapter<'a, C> {
                 .and_then(Value::as_str)
                 .ok_or_else(|| DomainError::Import("SimpleFIN account missing 'id'".into()))?
                 .to_string();
-            let currency_str = acc
-                .get("currency")
-                .and_then(Value::as_str)
-                .ok_or_else(|| DomainError::Import(format!(
+            let currency_str = acc.get("currency").and_then(Value::as_str).ok_or_else(|| {
+                DomainError::Import(format!(
                     "SimpleFIN account {external_account_id} missing 'currency'"
-                )))?;
+                ))
+            })?;
             let currency = CurrencyCode::from_str(currency_str).map_err(|e| {
                 DomainError::Import(format!(
                     "SimpleFIN account {external_account_id} unsupported currency {currency_str}: {e}"
@@ -114,28 +107,30 @@ impl<'a, C: HttpClient> SimpleFinAdapter<'a, C> {
                 let external_id = tx
                     .get("id")
                     .and_then(Value::as_str)
-                    .ok_or_else(|| DomainError::Import(format!(
-                        "SimpleFIN transaction under {external_account_id} missing 'id'"
-                    )))?
+                    .ok_or_else(|| {
+                        DomainError::Import(format!(
+                            "SimpleFIN transaction under {external_account_id} missing 'id'"
+                        ))
+                    })?
                     .to_string();
-                let posted = tx
-                    .get("posted")
-                    .and_then(Value::as_i64)
-                    .ok_or_else(|| DomainError::Import(format!(
+                let posted = tx.get("posted").and_then(Value::as_i64).ok_or_else(|| {
+                    DomainError::Import(format!(
                         "SimpleFIN transaction {external_id} missing 'posted'"
-                    )))?;
+                    ))
+                })?;
                 let date = DateTime::from_timestamp(posted, 0)
-                    .ok_or_else(|| DomainError::Import(format!(
-                        "SimpleFIN transaction {external_id} 'posted' out of range: {posted}"
-                    )))?
+                    .ok_or_else(|| {
+                        DomainError::Import(format!(
+                            "SimpleFIN transaction {external_id} 'posted' out of range: {posted}"
+                        ))
+                    })?
                     .with_timezone(&Utc)
                     .date_naive();
-                let amount_str = tx
-                    .get("amount")
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| DomainError::Import(format!(
+                let amount_str = tx.get("amount").and_then(Value::as_str).ok_or_else(|| {
+                    DomainError::Import(format!(
                         "SimpleFIN transaction {external_id} missing 'amount'"
-                    )))?;
+                    ))
+                })?;
                 let amount = Decimal::from_str(amount_str).map_err(|e| {
                     DomainError::Import(format!(
                         "SimpleFIN transaction {external_id} amount parse {amount_str}: {e}"
@@ -180,8 +175,8 @@ impl<C: HttpClient> BankSyncAdapter for SimpleFinAdapter<'_, C> {
     ) -> Result<Vec<(String, Vec<RemoteTransaction>)>, DomainError> {
         let (base, user, pass) = Self::split_access_url(&self.access_url)?;
         // Default to today - 2 years on first sync.
-        let effective_since = since
-            .unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
+        let effective_since =
+            since.unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
         let url = Self::build_accounts_url(&base, effective_since);
         let body = self.client.get_with_basic_auth(&url, &user, &pass)?;
         Self::parse_body(&body)
@@ -212,15 +207,23 @@ mod tests {
             }
         }
         fn respond(self, body: &str) -> Self {
-            self.responses.borrow_mut().push(Canned::Body(body.to_string()));
+            self.responses
+                .borrow_mut()
+                .push(Canned::Body(body.to_string()));
             self
         }
         fn error(self, msg: &str) -> Self {
-            self.responses.borrow_mut().push(Canned::Error(msg.to_string()));
+            self.responses
+                .borrow_mut()
+                .push(Canned::Error(msg.to_string()));
             self
         }
         fn last_call(&self) -> (String, Option<(String, String)>) {
-            self.calls.borrow().last().cloned().expect("no calls recorded")
+            self.calls
+                .borrow()
+                .last()
+                .cloned()
+                .expect("no calls recorded")
         }
     }
 
@@ -284,8 +287,8 @@ mod tests {
 
     #[test]
     fn split_access_url_rejects_missing_userinfo() {
-        let err = SimpleFinAdapter::<FakeHttpClient>::split_access_url("https://host/path")
-            .unwrap_err();
+        let err =
+            SimpleFinAdapter::<FakeHttpClient>::split_access_url("https://host/path").unwrap_err();
         assert!(matches!(err, DomainError::Import(_)));
     }
 
@@ -296,10 +299,8 @@ mod tests {
         let body = sample_body(&account);
 
         let client = FakeHttpClient::new().respond(&body);
-        let adapter = SimpleFinAdapter::new(
-            &client,
-            "https://u:p@bridge.simplefin.org/simplefin".into(),
-        );
+        let adapter =
+            SimpleFinAdapter::new(&client, "https://u:p@bridge.simplefin.org/simplefin".into());
 
         let result = adapter
             .sync(Some(NaiveDate::from_ymd_opt(2026, 1, 1).unwrap()))

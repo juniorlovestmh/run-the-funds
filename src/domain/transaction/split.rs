@@ -30,13 +30,19 @@ impl TransactionSplit {
         notes: Option<String>,
     ) -> Result<Self, DomainError> {
         if transaction_id.trim().is_empty() {
-            return Err(DomainError::Validation("split transaction_id is required".into()));
+            return Err(DomainError::Validation(
+                "split transaction_id is required".into(),
+            ));
         }
         if category_id.trim().is_empty() {
-            return Err(DomainError::Validation("split category_id is required".into()));
+            return Err(DomainError::Validation(
+                "split category_id is required".into(),
+            ));
         }
         if amount.is_zero() {
-            return Err(DomainError::Validation("split amount must be non-zero".into()));
+            return Err(DomainError::Validation(
+                "split amount must be non-zero".into(),
+            ));
         }
         Ok(Self {
             id,
@@ -76,31 +82,52 @@ mod tests {
         );
         assert!(ok.is_ok());
 
-        assert!(TransactionSplit::new(
-            "s1".into(), "".into(), "cat-1".into(),
-            Money::new(dec!(-50), CurrencyCode::USD), None
-        ).is_err());
-        assert!(TransactionSplit::new(
-            "s1".into(), "txn-1".into(), "".into(),
-            Money::new(dec!(-50), CurrencyCode::USD), None
-        ).is_err());
+        assert!(
+            TransactionSplit::new(
+                "s1".into(),
+                "".into(),
+                "cat-1".into(),
+                Money::new(dec!(-50), CurrencyCode::USD),
+                None
+            )
+            .is_err()
+        );
+        assert!(
+            TransactionSplit::new(
+                "s1".into(),
+                "txn-1".into(),
+                "".into(),
+                Money::new(dec!(-50), CurrencyCode::USD),
+                None
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn new_rejects_zero_amount() {
-        assert!(TransactionSplit::new(
-            "s1".into(), "txn-1".into(), "cat-1".into(),
-            Money::new(dec!(0), CurrencyCode::USD), None
-        ).is_err());
+        assert!(
+            TransactionSplit::new(
+                "s1".into(),
+                "txn-1".into(),
+                "cat-1".into(),
+                Money::new(dec!(0), CurrencyCode::USD),
+                None
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn serde_roundtrip() {
         let split = TransactionSplit::new(
-            "s1".into(), "txn-1".into(), "cat-1".into(),
+            "s1".into(),
+            "txn-1".into(),
+            "cat-1".into(),
             Money::new(dec!(-99.99), CurrencyCode::USD),
             Some("groceries".into()),
-        ).unwrap();
+        )
+        .unwrap();
         let json = serde_json::to_string(&split).unwrap();
         let decoded: TransactionSplit = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded, split);

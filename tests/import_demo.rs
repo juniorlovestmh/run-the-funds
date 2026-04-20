@@ -31,15 +31,17 @@ fn run(args: &[&str]) -> Output {
 fn parse_stdout(output: &Output) -> Value {
     let stdout = std::str::from_utf8(&output.stdout).expect("stdout not utf-8");
     serde_json::from_str(stdout).unwrap_or_else(|e| {
-        panic!("failed to parse stdout as JSON: {e}\nstdout: {stdout}\nstderr: {}", String::from_utf8_lossy(&output.stderr))
+        panic!(
+            "failed to parse stdout as JSON: {e}\nstdout: {stdout}\nstderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )
     })
 }
 
 fn parse_stderr(output: &Output) -> Value {
     let stderr = std::str::from_utf8(&output.stderr).expect("stderr not utf-8");
-    serde_json::from_str(stderr).unwrap_or_else(|e| {
-        panic!("failed to parse stderr as JSON: {e}\nstderr: {stderr}")
-    })
+    serde_json::from_str(stderr)
+        .unwrap_or_else(|e| panic!("failed to parse stderr as JSON: {e}\nstderr: {stderr}"))
 }
 
 fn create_account(db: &str, name: &str, account_type: &str, currency: &str) -> String {
@@ -230,8 +232,7 @@ fn end_to_end_import_demo() {
     let txns = json["data"].as_array().unwrap();
     assert_eq!(txns.len(), 3);
     assert!(
-        txns.iter()
-            .all(|t| t["amount"]["currency"] == "BRL"),
+        txns.iter().all(|t| t["amount"]["currency"] == "BRL"),
         "all Nubank rows must be tagged BRL"
     );
     // S03 enrichment: every BRL row gets amount_usd + rate metadata. Seeded

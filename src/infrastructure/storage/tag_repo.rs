@@ -105,9 +105,7 @@ impl TagRepository for SqliteTagRepository<'_> {
     ) -> Result<Option<Tag>, DomainError> {
         self.db
             .conn()
-            .prepare(
-                "SELECT * FROM tags WHERE external_provider = ?1 AND external_id = ?2",
-            )
+            .prepare("SELECT * FROM tags WHERE external_provider = ?1 AND external_id = ?2")
             .map_err(|e| DomainError::Storage(format!("prepare: {e}")))?
             .query_row([provider, external_id], Self::row_to_tag)
             .optional()
@@ -169,9 +167,7 @@ mod tests {
     use crate::domain::account::{Account, AccountRepository, AccountType};
     use crate::domain::currency::{CurrencyCode, Money};
     use crate::domain::transaction::{Transaction, TransactionRepository};
-    use crate::infrastructure::storage::{
-        SqliteAccountRepository, SqliteTransactionRepository,
-    };
+    use crate::infrastructure::storage::{SqliteAccountRepository, SqliteTransactionRepository};
     use rust_decimal::Decimal;
     use std::str::FromStr;
 
@@ -265,10 +261,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(found.id, "tag-1");
-        assert!(repo
-            .find_by_external("monarch", "nope")
-            .unwrap()
-            .is_none());
+        assert!(repo.find_by_external("monarch", "nope").unwrap().is_none());
     }
 
     #[test]
@@ -376,7 +369,8 @@ mod tests {
     fn find_all_ordered_by_order_index_then_name() {
         let db = setup();
         let repo = SqliteTagRepository::new(&db);
-        repo.save(&make_external_tag("t-a", "Alpha", "ext-a")).unwrap();
+        repo.save(&make_external_tag("t-a", "Alpha", "ext-a"))
+            .unwrap();
         repo.save(&make_tag("t-b", "Beta")).unwrap();
         repo.save(&make_external_tag("t-c", "Charlie", "ext-c"))
             .unwrap();

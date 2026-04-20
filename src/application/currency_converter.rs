@@ -82,7 +82,10 @@ impl<R: ExchangeRateRepository, P: RateProvider> CurrencyConverter<R, P> {
                 }
             } else {
                 if days_back == 0 {
-                    eprintln!("fetching {} rate for {try_date}...", self.provider.source_name());
+                    eprintln!(
+                        "fetching {} rate for {try_date}...",
+                        self.provider.source_name()
+                    );
                 }
                 self.try_fetch_and_save(from, to, try_date)?
             };
@@ -179,9 +182,19 @@ mod tests {
                 fail_on_next_call: RefCell::new(None),
             }
         }
-        fn with(mut self, from: CurrencyCode, to: CurrencyCode, date: (i32, u32, u32), rate: Decimal) -> Self {
+        fn with(
+            mut self,
+            from: CurrencyCode,
+            to: CurrencyCode,
+            date: (i32, u32, u32),
+            rate: Decimal,
+        ) -> Self {
             self.rates.insert(
-                (from, to, NaiveDate::from_ymd_opt(date.0, date.1, date.2).unwrap()),
+                (
+                    from,
+                    to,
+                    NaiveDate::from_ymd_opt(date.0, date.1, date.2).unwrap(),
+                ),
                 rate,
             );
             self
@@ -208,10 +221,13 @@ mod tests {
             if let Some(msg) = self.fail_on_next_call.borrow_mut().take() {
                 return Err(DomainError::Import(msg));
             }
-            self.rates.get(&(from, to, date)).copied().ok_or(DomainError::NotFound {
-                entity: "ExchangeRate".into(),
-                id: format!("FAKE {from}→{to} {date}"),
-            })
+            self.rates
+                .get(&(from, to, date))
+                .copied()
+                .ok_or(DomainError::NotFound {
+                    entity: "ExchangeRate".into(),
+                    id: format!("FAKE {from}→{to} {date}"),
+                })
         }
     }
 
@@ -227,7 +243,12 @@ mod tests {
         let svc = CurrencyConverter::new(repo, provider);
 
         let c = svc
-            .convert(dec!(1000), CurrencyCode::USD, CurrencyCode::USD, date(2026, 4, 7))
+            .convert(
+                dec!(1000),
+                CurrencyCode::USD,
+                CurrencyCode::USD,
+                date(2026, 4, 7),
+            )
             .unwrap();
         assert_eq!(c.amount, dec!(1000));
         assert_eq!(c.rate, Decimal::ONE);
@@ -250,7 +271,12 @@ mod tests {
         let svc = CurrencyConverter::new(repo, provider);
 
         let c = svc
-            .convert(dec!(100), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
+            .convert(
+                dec!(100),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 7),
+            )
             .unwrap();
         assert_eq!(c.amount, dec!(512.00));
         assert_eq!(c.rate, dec!(5.12));
@@ -279,12 +305,22 @@ mod tests {
         );
         let svc = CurrencyConverter::new(repo, provider);
 
-        svc.convert(dec!(1), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
-            .unwrap();
+        svc.convert(
+            dec!(1),
+            CurrencyCode::USD,
+            CurrencyCode::BRL,
+            date(2026, 4, 7),
+        )
+        .unwrap();
         let call_after_first = svc.provider.call_count();
 
-        svc.convert(dec!(2), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
-            .unwrap();
+        svc.convert(
+            dec!(2),
+            CurrencyCode::USD,
+            CurrencyCode::BRL,
+            date(2026, 4, 7),
+        )
+        .unwrap();
         assert_eq!(
             svc.provider.call_count(),
             call_after_first,
@@ -307,7 +343,12 @@ mod tests {
         let svc = CurrencyConverter::new(repo, provider);
 
         let c = svc
-            .convert(dec!(100), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 5))
+            .convert(
+                dec!(100),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 5),
+            )
             .unwrap();
         assert_eq!(c.rate, dec!(5.10));
         assert_eq!(c.rate_date, date(2026, 4, 3));
@@ -338,13 +379,15 @@ mod tests {
         SqliteExchangeRateRepository::new(&db).save(&seed).unwrap();
 
         let provider = FakeProvider::new(); // no canned rates → always NotFound
-        let svc = CurrencyConverter::new(
-            SqliteExchangeRateRepository::new(&db),
-            provider,
-        );
+        let svc = CurrencyConverter::new(SqliteExchangeRateRepository::new(&db), provider);
 
         let c = svc
-            .convert(dec!(100), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 5))
+            .convert(
+                dec!(100),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 5),
+            )
             .unwrap();
         assert_eq!(c.rate, dec!(5.10));
         assert_eq!(c.rate_date, date(2026, 4, 3));
@@ -361,7 +404,12 @@ mod tests {
         let svc = CurrencyConverter::new(repo, provider);
 
         let err = svc
-            .convert(dec!(100), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 5))
+            .convert(
+                dec!(100),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 5),
+            )
             .unwrap_err();
         assert!(matches!(err, DomainError::NotFound { .. }));
     }
@@ -375,7 +423,12 @@ mod tests {
         let svc = CurrencyConverter::new(repo, provider);
 
         let err = svc
-            .convert(dec!(100), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
+            .convert(
+                dec!(100),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 7),
+            )
             .unwrap_err();
         match err {
             DomainError::Import(msg) => assert!(msg.contains("503")),
@@ -394,7 +447,12 @@ mod tests {
         );
         let svc = CurrencyConverter::new(SqliteExchangeRateRepository::new(&db), provider);
         let c = svc
-            .convert(dec!(0), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
+            .convert(
+                dec!(0),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 7),
+            )
             .unwrap();
         assert_eq!(c.amount, Decimal::ZERO);
     }
@@ -410,7 +468,12 @@ mod tests {
         );
         let svc = CurrencyConverter::new(SqliteExchangeRateRepository::new(&db), provider);
         let c = svc
-            .convert(dec!(-500), CurrencyCode::BRL, CurrencyCode::USD, date(2026, 4, 7))
+            .convert(
+                dec!(-500),
+                CurrencyCode::BRL,
+                CurrencyCode::USD,
+                date(2026, 4, 7),
+            )
             .unwrap();
         assert_eq!(c.amount, dec!(-100.0));
     }
@@ -428,12 +491,15 @@ mod tests {
         );
         SqliteExchangeRateRepository::new(&db).save(&seed).unwrap();
 
-        let svc = CurrencyConverter::new(
-            SqliteExchangeRateRepository::new(&db),
-            FakeProvider::new(),
-        );
+        let svc =
+            CurrencyConverter::new(SqliteExchangeRateRepository::new(&db), FakeProvider::new());
         let c = svc
-            .convert(dec!(10), CurrencyCode::USD, CurrencyCode::BRL, date(2026, 4, 7))
+            .convert(
+                dec!(10),
+                CurrencyCode::USD,
+                CurrencyCode::BRL,
+                date(2026, 4, 7),
+            )
             .unwrap();
         assert!(c.fallback_reason.is_none());
         assert_eq!(svc.provider.call_count(), 0);

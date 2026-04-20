@@ -59,9 +59,7 @@ impl<C: HttpClient> BcbPtaxProvider<C> {
         let values = parsed
             .get("value")
             .and_then(Value::as_array)
-            .ok_or_else(|| {
-                DomainError::Import("BCB PTAX response missing 'value' array".into())
-            })?;
+            .ok_or_else(|| DomainError::Import("BCB PTAX response missing 'value' array".into()))?;
 
         if values.is_empty() {
             // No publication on this date (weekend/holiday) — the caller
@@ -76,15 +74,11 @@ impl<C: HttpClient> BcbPtaxProvider<C> {
         let compra = row
             .get("cotacaoCompra")
             .and_then(Value::as_f64)
-            .ok_or_else(|| {
-                DomainError::Import("BCB PTAX row missing cotacaoCompra".into())
-            })?;
+            .ok_or_else(|| DomainError::Import("BCB PTAX row missing cotacaoCompra".into()))?;
         let venda = row
             .get("cotacaoVenda")
             .and_then(Value::as_f64)
-            .ok_or_else(|| {
-                DomainError::Import("BCB PTAX row missing cotacaoVenda".into())
-            })?;
+            .ok_or_else(|| DomainError::Import("BCB PTAX row missing cotacaoVenda".into()))?;
 
         // Format to 6 decimal places, then parse as Decimal. f64 is fine for
         // rate magnitudes (<< 2^53) and 6dp is well within what PTAX publishes.
@@ -226,7 +220,9 @@ mod tests {
         let client = FakeHttpClient::new().with_response(&url, &body_with(5.10, 5.14));
 
         let provider = BcbPtaxProvider::with_client(client);
-        let rate = provider.fetch(CurrencyCode::USD, CurrencyCode::BRL, date).unwrap();
+        let rate = provider
+            .fetch(CurrencyCode::USD, CurrencyCode::BRL, date)
+            .unwrap();
         // midpoint = (5.10 + 5.14) / 2 = 5.12
         assert_eq!(rate, dec!(5.120000));
     }
@@ -238,7 +234,9 @@ mod tests {
         let client = FakeHttpClient::new().with_response(&url, &body_with(5.00, 5.00));
         let provider = BcbPtaxProvider::with_client(client);
 
-        let rate = provider.fetch(CurrencyCode::BRL, CurrencyCode::USD, date).unwrap();
+        let rate = provider
+            .fetch(CurrencyCode::BRL, CurrencyCode::USD, date)
+            .unwrap();
         // 1 / 5.00 = 0.20
         assert_eq!(rate, dec!(0.2));
     }

@@ -147,9 +147,7 @@ impl CategoryRepository for SqliteCategoryRepository<'_> {
     ) -> Result<Option<Category>, DomainError> {
         self.db
             .conn()
-            .prepare(
-                "SELECT * FROM categories WHERE external_provider = ?1 AND external_id = ?2",
-            )
+            .prepare("SELECT * FROM categories WHERE external_provider = ?1 AND external_id = ?2")
             .map_err(|e| DomainError::Storage(format!("prepare: {e}")))?
             .query_row([provider, external_id], Self::row_to_category)
             .optional()
@@ -294,8 +292,7 @@ mod tests {
         let db = setup();
         let repo = SqliteCategoryRepository::new(&db);
 
-        let result =
-            repo.save_category(&make_category("cat-1", "nonexistent-group", "Groceries"));
+        let result = repo.save_category(&make_category("cat-1", "nonexistent-group", "Groceries"));
         assert!(result.is_err());
     }
 
@@ -310,9 +307,6 @@ mod tests {
     fn category_not_found() {
         let db = setup();
         let repo = SqliteCategoryRepository::new(&db);
-        assert!(repo
-            .find_category_by_id("nonexistent")
-            .unwrap()
-            .is_none());
+        assert!(repo.find_category_by_id("nonexistent").unwrap().is_none());
     }
 }

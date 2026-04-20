@@ -28,7 +28,9 @@ impl ProviderCredentials {
             return Err(DomainError::Validation("provider is required".into()));
         }
         if data.trim().is_empty() {
-            return Err(DomainError::Validation("credentials data is required".into()));
+            return Err(DomainError::Validation(
+                "credentials data is required".into(),
+            ));
         }
         let now = Utc::now();
         Ok(Self {
@@ -62,15 +64,13 @@ mod tests {
 
     #[test]
     fn new_rejects_empty_provider() {
-        let err =
-            ProviderCredentials::new("c1".into(), "".into(), "{}".into()).unwrap_err();
+        let err = ProviderCredentials::new("c1".into(), "".into(), "{}".into()).unwrap_err();
         assert!(matches!(err, DomainError::Validation(_)));
     }
 
     #[test]
     fn new_rejects_empty_data() {
-        let err =
-            ProviderCredentials::new("c1".into(), "simplefin".into(), "".into()).unwrap_err();
+        let err = ProviderCredentials::new("c1".into(), "simplefin".into(), "".into()).unwrap_err();
         assert!(matches!(err, DomainError::Validation(_)));
     }
 

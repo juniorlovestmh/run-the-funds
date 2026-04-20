@@ -20,8 +20,8 @@
 
 use std::str::FromStr;
 
-use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde_json::Value;
@@ -74,9 +74,9 @@ impl<'a, C: HttpClient> TellerAdapter<'a, C> {
         let body = self.authed_get(&url)?;
         let parsed: Value = serde_json::from_str(&body)
             .map_err(|e| DomainError::Import(format!("Teller accounts JSON parse: {e}")))?;
-        let arr = parsed.as_array().ok_or_else(|| {
-            DomainError::Import("Teller /accounts expected a JSON array".into())
-        })?;
+        let arr = parsed
+            .as_array()
+            .ok_or_else(|| DomainError::Import("Teller /accounts expected a JSON array".into()))?;
 
         let mut out = Vec::new();
         for row in arr {
@@ -85,12 +85,9 @@ impl<'a, C: HttpClient> TellerAdapter<'a, C> {
                 .and_then(Value::as_str)
                 .ok_or_else(|| DomainError::Import("Teller account missing 'id'".into()))?
                 .to_string();
-            let currency_str = row
-                .get("currency")
-                .and_then(Value::as_str)
-                .ok_or_else(|| {
-                    DomainError::Import(format!("Teller account {id} missing 'currency'"))
-                })?;
+            let currency_str = row.get("currency").and_then(Value::as_str).ok_or_else(|| {
+                DomainError::Import(format!("Teller account {id} missing 'currency'"))
+            })?;
             // Silently skip accounts in currencies the domain doesn't know (e.g. EUR).
             // The caller (SyncService) only needs the accounts the user has
             // locally linked anyway; remote-only currencies are a non-event.
@@ -126,9 +123,8 @@ impl<'a, C: HttpClient> TellerAdapter<'a, C> {
             }
 
             let body = self.authed_get(&url)?;
-            let parsed: Value = serde_json::from_str(&body).map_err(|e| {
-                DomainError::Import(format!("Teller transactions JSON parse: {e}"))
-            })?;
+            let parsed: Value = serde_json::from_str(&body)
+                .map_err(|e| DomainError::Import(format!("Teller transactions JSON parse: {e}")))?;
             let rows = parsed.as_array().ok_or_else(|| {
                 DomainError::Import("Teller /transactions expected a JSON array".into())
             })?;
@@ -159,27 +155,17 @@ impl<'a, C: HttpClient> TellerAdapter<'a, C> {
             .and_then(Value::as_str)
             .ok_or_else(|| DomainError::Import("Teller transaction missing 'id'".into()))?
             .to_string();
-        let date_str = row
-            .get("date")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                DomainError::Import(format!(
-                    "Teller transaction {external_id} missing 'date'"
-                ))
-            })?;
+        let date_str = row.get("date").and_then(Value::as_str).ok_or_else(|| {
+            DomainError::Import(format!("Teller transaction {external_id} missing 'date'"))
+        })?;
         let date = NaiveDate::parse_from_str(date_str, "%Y-%m-%d").map_err(|e| {
             DomainError::Import(format!(
                 "Teller transaction {external_id} malformed date {date_str}: {e}"
             ))
         })?;
-        let amount_str = row
-            .get("amount")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                DomainError::Import(format!(
-                    "Teller transaction {external_id} missing 'amount'"
-                ))
-            })?;
+        let amount_str = row.get("amount").and_then(Value::as_str).ok_or_else(|| {
+            DomainError::Import(format!("Teller transaction {external_id} missing 'amount'"))
+        })?;
         let amount = Decimal::from_str(amount_str).map_err(|e| {
             DomainError::Import(format!(
                 "Teller transaction {external_id} amount parse {amount_str}: {e}"
@@ -223,8 +209,8 @@ impl<C: HttpClient> BankSyncAdapter for TellerAdapter<'_, C> {
         &self,
         since: Option<NaiveDate>,
     ) -> Result<Vec<(String, Vec<RemoteTransaction>)>, DomainError> {
-        let effective_since = since
-            .unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
+        let effective_since =
+            since.unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
         let accounts = self.fetch_accounts()?;
         let mut out = Vec::with_capacity(accounts.len());
         for acc in accounts {
@@ -300,7 +286,11 @@ mod tests {
             self.calls.borrow_mut().push((url.to_string(), captured));
             let mut map = self.responses.borrow_mut();
             let entry = map.get_mut(url).and_then(|v| {
-                if v.is_empty() { None } else { Some(v.remove(0)) }
+                if v.is_empty() {
+                    None
+                } else {
+                    Some(v.remove(0))
+                }
             });
             match entry {
                 Some(Canned::Body(s)) => Ok(s),
@@ -367,10 +357,16 @@ mod tests {
         // base64("test-token:") = "dGVzdC10b2tlbjo="
         let expected = format!("Basic {}", B64.encode("test-token:"));
         assert!(
-            headers.iter().any(|(k, v)| k == "Authorization" && v == &expected),
+            headers
+                .iter()
+                .any(|(k, v)| k == "Authorization" && v == &expected),
             "expected Basic auth with token:empty, got {headers:?}"
         );
-        assert!(headers.iter().any(|(k, v)| k == "Accept" && v == "application/json"));
+        assert!(
+            headers
+                .iter()
+                .any(|(k, v)| k == "Accept" && v == "application/json")
+        );
     }
 
     #[test]
@@ -379,13 +375,12 @@ mod tests {
         let accounts = r#"[{"id":"acc_1","currency":"USD","name":"A"}]"#;
         let first_page: Vec<String> = (0..PAGE_SIZE)
             .map(|i| {
-                format!(
-                    r#"{{"id":"t{i}","date":"2026-04-10","amount":"-1.00","description":"x"}}"#
-                )
+                format!(r#"{{"id":"t{i}","date":"2026-04-10","amount":"-1.00","description":"x"}}"#)
             })
             .collect();
         let first_page_body = format!("[{}]", first_page.join(","));
-        let second_page_body = r#"[{"id":"t_last","date":"2026-04-11","amount":"-2.00","description":"y"}]"#;
+        let second_page_body =
+            r#"[{"id":"t_last","date":"2026-04-11","amount":"-2.00","description":"y"}]"#;
 
         let cursor_id = format!("t{}", PAGE_SIZE - 1);
         let client = FakeHttpClient::new()
@@ -467,8 +462,8 @@ mod tests {
 
     #[test]
     fn http_error_on_accounts_propagates() {
-        let client = FakeHttpClient::new()
-            .get_errors(&format!("{BASE}/accounts"), "HTTP 401 invalid_token");
+        let client =
+            FakeHttpClient::new().get_errors(&format!("{BASE}/accounts"), "HTTP 401 invalid_token");
         let err = adapter(&client).sync(None).unwrap_err();
         match err {
             DomainError::Import(msg) => assert!(msg.contains("401")),

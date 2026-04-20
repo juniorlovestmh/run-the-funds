@@ -108,9 +108,18 @@ mod tests {
     #[test]
     fn relationship_parse() {
         assert_eq!("self".parse::<Relationship>().unwrap(), Relationship::Self_);
-        assert_eq!("spouse".parse::<Relationship>().unwrap(), Relationship::Spouse);
-        assert_eq!("CHILD".parse::<Relationship>().unwrap(), Relationship::Child);
-        assert_eq!("Other".parse::<Relationship>().unwrap(), Relationship::Other);
+        assert_eq!(
+            "spouse".parse::<Relationship>().unwrap(),
+            Relationship::Spouse
+        );
+        assert_eq!(
+            "CHILD".parse::<Relationship>().unwrap(),
+            Relationship::Child
+        );
+        assert_eq!(
+            "Other".parse::<Relationship>().unwrap(),
+            Relationship::Other
+        );
     }
 
     #[test]

@@ -82,7 +82,11 @@ impl Account {
     }
 
     /// Link this account to a remote provider. Both fields must be non-empty.
-    pub fn link(&mut self, provider: String, external_account_id: String) -> Result<(), DomainError> {
+    pub fn link(
+        &mut self,
+        provider: String,
+        external_account_id: String,
+    ) -> Result<(), DomainError> {
         if provider.trim().is_empty() {
             return Err(DomainError::Validation("provider is required".into()));
         }
@@ -342,6 +346,9 @@ mod tests {
         let json = serde_json::to_string(&acc).unwrap();
         let decoded: Account = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded.external_provider.as_deref(), Some("pluggy"));
-        assert_eq!(decoded.external_account_id.as_deref(), Some("pluggy-item-xyz"));
+        assert_eq!(
+            decoded.external_account_id.as_deref(),
+            Some("pluggy-item-xyz")
+        );
     }
 }

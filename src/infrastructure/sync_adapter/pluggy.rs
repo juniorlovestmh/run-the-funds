@@ -61,13 +61,8 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
 
     fn authed_get(&self, url: &str) -> Result<String, DomainError> {
         let key = self.ensure_api_key()?;
-        self.client.get_with_headers(
-            url,
-            &[
-                ("X-API-KEY", &key),
-                ("Accept", "application/json"),
-            ],
-        )
+        self.client
+            .get_with_headers(url, &[("X-API-KEY", &key), ("Accept", "application/json")])
     }
 
     fn ensure_api_key(&self) -> Result<String, DomainError> {
@@ -84,15 +79,12 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
             &body,
             &[("Content-Type", "application/json")],
         )?;
-        let parsed: Value = serde_json::from_str(&response).map_err(|e| {
-            DomainError::Import(format!("Pluggy auth JSON parse: {e}"))
-        })?;
+        let parsed: Value = serde_json::from_str(&response)
+            .map_err(|e| DomainError::Import(format!("Pluggy auth JSON parse: {e}")))?;
         let key = parsed
             .get("apiKey")
             .and_then(Value::as_str)
-            .ok_or_else(|| {
-                DomainError::Import("Pluggy auth response missing 'apiKey'".into())
-            })?
+            .ok_or_else(|| DomainError::Import("Pluggy auth response missing 'apiKey'".into()))?
             .to_string();
         *self.api_key.borrow_mut() = Some(key.clone());
         Ok(key)
@@ -101,9 +93,8 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
     fn fetch_accounts(&self) -> Result<Vec<PluggyAccount>, DomainError> {
         let url = format!("{}/accounts?itemId={}", self.base_url, self.item_id);
         let body = self.authed_get(&url)?;
-        let parsed: Value = serde_json::from_str(&body).map_err(|e| {
-            DomainError::Import(format!("Pluggy accounts JSON parse: {e}"))
-        })?;
+        let parsed: Value = serde_json::from_str(&body)
+            .map_err(|e| DomainError::Import(format!("Pluggy accounts JSON parse: {e}")))?;
         let results = parsed
             .get("results")
             .and_then(Value::as_array)
@@ -117,14 +108,12 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
                 .and_then(Value::as_str)
                 .ok_or_else(|| DomainError::Import("Pluggy account missing 'id'".into()))?
                 .to_string();
-            let currency_str = row
-                .get("currencyCode")
-                .and_then(Value::as_str)
-                .ok_or_else(|| {
-                    DomainError::Import(format!(
-                        "Pluggy account {id} missing 'currencyCode'"
-                    ))
-                })?;
+            let currency_str =
+                row.get("currencyCode")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| {
+                        DomainError::Import(format!("Pluggy account {id} missing 'currencyCode'"))
+                    })?;
             let currency = CurrencyCode::from_str(currency_str).map_err(|e| {
                 DomainError::Import(format!(
                     "Pluggy account {id} unsupported currency {currency_str}: {e}"
@@ -153,9 +142,8 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
                 page,
             );
             let body = self.authed_get(&url)?;
-            let parsed: Value = serde_json::from_str(&body).map_err(|e| {
-                DomainError::Import(format!("Pluggy transactions JSON parse: {e}"))
-            })?;
+            let parsed: Value = serde_json::from_str(&body)
+                .map_err(|e| DomainError::Import(format!("Pluggy transactions JSON parse: {e}")))?;
             let total_pages = parsed
                 .get("totalPages")
                 .and_then(Value::as_u64)
@@ -189,12 +177,9 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
             .to_string();
 
         // `date` is an ISO datetime string like "2024-04-08T13:00:00.000Z".
-        let date_str = row
-            .get("date")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                DomainError::Import(format!("Pluggy transaction {external_id} missing 'date'"))
-            })?;
+        let date_str = row.get("date").and_then(Value::as_str).ok_or_else(|| {
+            DomainError::Import(format!("Pluggy transaction {external_id} missing 'date'"))
+        })?;
         let date_prefix = date_str.get(..10).ok_or_else(|| {
             DomainError::Import(format!(
                 "Pluggy transaction {external_id} date too short: {date_str}"
@@ -209,9 +194,7 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
         // Amount can arrive as a JSON number OR string depending on connector;
         // accept both. We take the absolute value and let `type` determine sign.
         let raw_amount = row.get("amount").ok_or_else(|| {
-            DomainError::Import(format!(
-                "Pluggy transaction {external_id} missing 'amount'"
-            ))
+            DomainError::Import(format!("Pluggy transaction {external_id} missing 'amount'"))
         })?;
         let amount_magnitude = if let Some(s) = raw_amount.as_str() {
             Decimal::from_str(s).map_err(|e| {
@@ -233,14 +216,9 @@ impl<'a, C: HttpClient> PluggyAdapter<'a, C> {
         };
         let magnitude = amount_magnitude.abs();
 
-        let tx_type = row
-            .get("type")
-            .and_then(Value::as_str)
-            .ok_or_else(|| {
-                DomainError::Import(format!(
-                    "Pluggy transaction {external_id} missing 'type'"
-                ))
-            })?;
+        let tx_type = row.get("type").and_then(Value::as_str).ok_or_else(|| {
+            DomainError::Import(format!("Pluggy transaction {external_id} missing 'type'"))
+        })?;
         let amount = match tx_type {
             "DEBIT" => -magnitude,
             "CREDIT" => magnitude,
@@ -287,12 +265,13 @@ impl<C: HttpClient> BankSyncAdapter for PluggyAdapter<'_, C> {
         &self,
         since: Option<NaiveDate>,
     ) -> Result<Vec<(String, Vec<RemoteTransaction>)>, DomainError> {
-        let effective_since = since
-            .unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
+        let effective_since =
+            since.unwrap_or_else(|| Utc::now().date_naive() - chrono::Duration::days(730));
         let accounts = self.fetch_accounts()?;
         let mut out = Vec::with_capacity(accounts.len());
         for acc in accounts {
-            let txns = self.fetch_transactions_for_account(&acc.id, acc.currency, effective_since)?;
+            let txns =
+                self.fetch_transactions_for_account(&acc.id, acc.currency, effective_since)?;
             out.push((acc.id, txns));
         }
         Ok(out)
@@ -411,9 +390,7 @@ mod tests {
     }
 
     fn accounts_body(account_json: &str) -> String {
-        format!(
-            r#"{{"page":1,"total":1,"totalPages":1,"results":[{account_json}]}}"#
-        )
+        format!(r#"{{"page":1,"total":1,"totalPages":1,"results":[{account_json}]}}"#)
     }
 
     fn txns_body(results: &str, total_pages: usize) -> String {
@@ -435,7 +412,10 @@ mod tests {
         let txn = r#"{"id":"t1","date":"2026-04-10T13:00:00.000Z","amount":150.00,"type":"DEBIT","description":"Supermercado"}"#;
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("key-xyz"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &txns_body(txn, 1),
@@ -461,7 +441,10 @@ mod tests {
         let txn = r#"{"id":"t1","date":"2026-04-10T13:00:00Z","amount":2000.00,"type":"CREDIT","description":"Payroll"}"#;
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &txns_body(txn, 1),
@@ -480,16 +463,22 @@ mod tests {
         // Some connectors pre-sign amounts. Our logic always derives sign from
         // `type`, so a DEBIT with a negative number stays negative.
         let acc = r#"{"id":"a1","currencyCode":"BRL","name":"Conta"}"#;
-        let txn = r#"{"id":"t1","date":"2026-04-10","amount":-50.00,"type":"DEBIT","description":"X"}"#;
+        let txn =
+            r#"{"id":"t1","date":"2026-04-10","amount":-50.00,"type":"DEBIT","description":"X"}"#;
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &txns_body(txn, 1),
             );
         let a = adapter(&client);
-        let result = a.sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap())).unwrap();
+        let result = a
+            .sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
         assert_eq!(result[0].1[0].amount, dec!(-50.00));
     }
 
@@ -502,9 +491,7 @@ mod tests {
             .post_returns(&auth_body("k"))
             .get_returns(
                 &format!("{BASE}/accounts?itemId=item-42"),
-                &format!(
-                    r#"{{"page":1,"total":2,"totalPages":1,"results":[{a1},{a2}]}}"#
-                ),
+                &format!(r#"{{"page":1,"total":2,"totalPages":1,"results":[{a1},{a2}]}}"#),
             )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
@@ -515,7 +502,8 @@ mod tests {
                 &txns_body("", 1),
             );
         let a = adapter(&client);
-        a.sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap())).unwrap();
+        a.sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
         // Exactly 4 calls: 1 POST /auth, 1 GET /accounts, 2 GET /transactions.
         assert_eq!(client.call_count(), 4);
     }
@@ -523,13 +511,19 @@ mod tests {
     #[test]
     fn pagination_walks_all_pages() {
         let acc = r#"{"id":"a1","currencyCode":"BRL","name":"A"}"#;
-        let p1_txn = r#"{"id":"p1","date":"2026-04-10","amount":10,"type":"DEBIT","description":"one"}"#;
-        let p2_txn = r#"{"id":"p2","date":"2026-04-11","amount":20,"type":"DEBIT","description":"two"}"#;
-        let p3_txn = r#"{"id":"p3","date":"2026-04-12","amount":30,"type":"DEBIT","description":"three"}"#;
+        let p1_txn =
+            r#"{"id":"p1","date":"2026-04-10","amount":10,"type":"DEBIT","description":"one"}"#;
+        let p2_txn =
+            r#"{"id":"p2","date":"2026-04-11","amount":20,"type":"DEBIT","description":"two"}"#;
+        let p3_txn =
+            r#"{"id":"p3","date":"2026-04-12","amount":30,"type":"DEBIT","description":"three"}"#;
 
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &format!(r#"{{"page":1,"total":3,"totalPages":3,"results":[{p1_txn}]}}"#),
@@ -543,7 +537,9 @@ mod tests {
                 &format!(r#"{{"page":3,"total":3,"totalPages":3,"results":[{p3_txn}]}}"#),
             );
         let a = adapter(&client);
-        let result = a.sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap())).unwrap();
+        let result = a
+            .sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
         assert_eq!(result[0].1.len(), 3);
         let ids: Vec<&str> = result[0].1.iter().map(|t| t.external_id.as_str()).collect();
         assert_eq!(ids, vec!["p1", "p2", "p3"]);
@@ -574,13 +570,18 @@ mod tests {
         let txn = r#"{"id":"t1","date":"2026-04-10","amount":10,"type":"DEBIT","description":"raw memo","merchant":{"name":"Real Merchant"}}"#;
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &txns_body(txn, 1),
             );
         let a = adapter(&client);
-        let result = a.sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap())).unwrap();
+        let result = a
+            .sync(Some(NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()))
+            .unwrap();
         let t = &result[0].1[0];
         assert_eq!(t.payee.as_deref(), Some("Real Merchant"));
         assert_eq!(t.description.as_deref(), Some("raw memo"));
@@ -589,10 +590,14 @@ mod tests {
     #[test]
     fn unknown_type_errors() {
         let acc = r#"{"id":"a1","currencyCode":"BRL","name":"A"}"#;
-        let txn = r#"{"id":"t1","date":"2026-04-10","amount":10,"type":"UNKNOWN","description":"x"}"#;
+        let txn =
+            r#"{"id":"t1","date":"2026-04-10","amount":10,"type":"UNKNOWN","description":"x"}"#;
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_returns(&format!("{BASE}/accounts?itemId=item-42"), &accounts_body(acc))
+            .get_returns(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                &accounts_body(acc),
+            )
             .get_returns(
                 &format!("{BASE}/transactions?accountId=a1&from=2026-04-01&pageSize=500&page=1"),
                 &txns_body(txn, 1),
@@ -608,7 +613,10 @@ mod tests {
     fn http_error_on_accounts_propagates() {
         let client = FakeHttpClient::new()
             .post_returns(&auth_body("k"))
-            .get_errors(&format!("{BASE}/accounts?itemId=item-42"), "HTTP 429 rate limited");
+            .get_errors(
+                &format!("{BASE}/accounts?itemId=item-42"),
+                "HTTP 429 rate limited",
+            );
         let a = adapter(&client);
         let err = a.sync(None).unwrap_err();
         match err {

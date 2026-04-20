@@ -68,10 +68,7 @@ impl ProviderCredentialsRepository for SqliteProviderCredentialsRepository<'_> {
         Ok(())
     }
 
-    fn find_by_provider(
-        &self,
-        provider: &str,
-    ) -> Result<Option<ProviderCredentials>, DomainError> {
+    fn find_by_provider(&self, provider: &str) -> Result<Option<ProviderCredentials>, DomainError> {
         self.db
             .conn()
             .prepare("SELECT * FROM provider_credentials WHERE provider = ?1 LIMIT 1")
@@ -98,12 +95,7 @@ mod tests {
     use super::*;
 
     fn creds(provider: &str, data: &str) -> ProviderCredentials {
-        ProviderCredentials::new(
-            format!("c-{provider}"),
-            provider.into(),
-            data.into(),
-        )
-        .unwrap()
+        ProviderCredentials::new(format!("c-{provider}"), provider.into(), data.into()).unwrap()
     }
 
     #[test]
@@ -148,8 +140,11 @@ mod tests {
         let repo = SqliteProviderCredentialsRepository::new(&db);
         repo.save(&creds("simplefin", r#"{"access_url":"x"}"#))
             .unwrap();
-        repo.save(&creds("pluggy", r#"{"client_id":"a","client_secret":"b","item_id":"c"}"#))
-            .unwrap();
+        repo.save(&creds(
+            "pluggy",
+            r#"{"client_id":"a","client_secret":"b","item_id":"c"}"#,
+        ))
+        .unwrap();
         assert!(repo.find_by_provider("simplefin").unwrap().is_some());
         assert!(repo.find_by_provider("pluggy").unwrap().is_some());
     }

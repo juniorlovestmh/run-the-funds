@@ -155,9 +155,8 @@ fn run_unified(db: &Database, since: Option<NaiveDate>) {
         std::process::exit(1);
     }
 
-    let any_success = report.simplefin.is_some()
-        || report.pluggy.is_some()
-        || report.teller.is_some();
+    let any_success =
+        report.simplefin.is_some() || report.pluggy.is_some() || report.teller.is_some();
     let response = CliResponse::ok(report);
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
 
@@ -411,8 +410,7 @@ fn build_teller_http(app: &TellerAppCreds) -> Result<UreqHttpClient, DomainError
         (Some(c), Some(k)) => UreqHttpClient::with_mtls(c, k),
         (None, None) => Ok(UreqHttpClient::new()),
         _ => Err(DomainError::Import(
-            "Teller app credentials have cert_pem XOR key_pem; expected both or neither"
-                .into(),
+            "Teller app credentials have cert_pem XOR key_pem; expected both or neither".into(),
         )),
     }
 }
@@ -438,9 +436,7 @@ fn run_simplefin(db: &Database, since: Option<NaiveDate>) {
     let creds = match creds_repo.find_by_provider("simplefin") {
         Ok(Some(c)) => c,
         Ok(None) => {
-            print_error(
-                "SimpleFIN not configured — run `rtf simplefin setup <setup-token>` first",
-            );
+            print_error("SimpleFIN not configured — run `rtf simplefin setup <setup-token>` first");
             std::process::exit(1);
         }
         Err(e) => {

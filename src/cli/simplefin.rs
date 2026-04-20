@@ -11,8 +11,8 @@
 //!
 //! Re-running replaces the stored credentials (upsert by provider).
 
-use base64::engine::general_purpose::{STANDARD as B64, URL_SAFE as B64_URL};
 use base64::Engine;
+use base64::engine::general_purpose::{STANDARD as B64, URL_SAFE as B64_URL};
 use uuid::Uuid;
 
 use crate::domain::credentials::{ProviderCredentials, ProviderCredentialsRepository};
@@ -53,8 +53,7 @@ fn exchange_and_store<C: HttpClient>(
     }
 
     let data = serde_json::json!({ "access_url": access_url }).to_string();
-    let creds =
-        ProviderCredentials::new(Uuid::new_v4().to_string(), "simplefin".into(), data)?;
+    let creds = ProviderCredentials::new(Uuid::new_v4().to_string(), "simplefin".into(), data)?;
     let repo = SqliteProviderCredentialsRepository::new(db);
     repo.save(&creds)?;
     Ok(())
@@ -67,9 +66,7 @@ fn decode_setup_token(token: &str) -> Result<String, DomainError> {
     let bytes = B64
         .decode(trimmed)
         .or_else(|_| B64_URL.decode(trimmed))
-        .map_err(|e| {
-            DomainError::Import(format!("SimpleFIN setup token base64 decode: {e}"))
-        })?;
+        .map_err(|e| DomainError::Import(format!("SimpleFIN setup token base64 decode: {e}")))?;
     let url = std::str::from_utf8(&bytes)
         .map_err(|e| DomainError::Import(format!("SimpleFIN setup token not utf-8: {e}")))?
         .trim()

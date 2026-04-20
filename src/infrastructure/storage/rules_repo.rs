@@ -240,5 +240,4 @@ mod tests {
         let rule = mk_rule("r1", "X", 100);
         assert!(repo.save(&rule).is_err());
     }
-
 }

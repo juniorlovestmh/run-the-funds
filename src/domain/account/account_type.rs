@@ -57,23 +57,47 @@ mod tests {
 
     #[test]
     fn parse_standard_forms() {
-        assert_eq!("checking".parse::<AccountType>().unwrap(), AccountType::Checking);
-        assert_eq!("savings".parse::<AccountType>().unwrap(), AccountType::Savings);
-        assert_eq!("credit_card".parse::<AccountType>().unwrap(), AccountType::CreditCard);
+        assert_eq!(
+            "checking".parse::<AccountType>().unwrap(),
+            AccountType::Checking
+        );
+        assert_eq!(
+            "savings".parse::<AccountType>().unwrap(),
+            AccountType::Savings
+        );
+        assert_eq!(
+            "credit_card".parse::<AccountType>().unwrap(),
+            AccountType::CreditCard
+        );
         assert_eq!("loan".parse::<AccountType>().unwrap(), AccountType::Loan);
     }
 
     #[test]
     fn parse_credit_card_variants() {
-        assert_eq!("creditcard".parse::<AccountType>().unwrap(), AccountType::CreditCard);
-        assert_eq!("credit-card".parse::<AccountType>().unwrap(), AccountType::CreditCard);
-        assert_eq!("CREDIT_CARD".parse::<AccountType>().unwrap(), AccountType::CreditCard);
+        assert_eq!(
+            "creditcard".parse::<AccountType>().unwrap(),
+            AccountType::CreditCard
+        );
+        assert_eq!(
+            "credit-card".parse::<AccountType>().unwrap(),
+            AccountType::CreditCard
+        );
+        assert_eq!(
+            "CREDIT_CARD".parse::<AccountType>().unwrap(),
+            AccountType::CreditCard
+        );
     }
 
     #[test]
     fn parse_case_insensitive() {
-        assert_eq!("CHECKING".parse::<AccountType>().unwrap(), AccountType::Checking);
-        assert_eq!("Savings".parse::<AccountType>().unwrap(), AccountType::Savings);
+        assert_eq!(
+            "CHECKING".parse::<AccountType>().unwrap(),
+            AccountType::Checking
+        );
+        assert_eq!(
+            "Savings".parse::<AccountType>().unwrap(),
+            AccountType::Savings
+        );
     }
 
     #[test]
@@ -84,7 +108,12 @@ mod tests {
 
     #[test]
     fn serde_roundtrip() {
-        for variant in [AccountType::Checking, AccountType::Savings, AccountType::CreditCard, AccountType::Loan] {
+        for variant in [
+            AccountType::Checking,
+            AccountType::Savings,
+            AccountType::CreditCard,
+            AccountType::Loan,
+        ] {
             let json = serde_json::to_string(&variant).unwrap();
             let deserialized: AccountType = serde_json::from_str(&json).unwrap();
             assert_eq!(variant, deserialized);

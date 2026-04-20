@@ -37,21 +37,35 @@ impl<'a> SqliteAccountRepository<'a> {
         let created_at_str: String = row.get("created_at")?;
         let updated_at_str: String = row.get("updated_at")?;
 
-        let account_type = AccountType::from_str(&account_type_str)
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(2, rusqlite::types::Type::Text, Box::from(e)))?;
-        let currency = CurrencyCode::from_str(&currency_str)
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::from(e)))?;
-        let balance_amount = Decimal::from_str(&balance_amount_str)
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(7, rusqlite::types::Type::Text, Box::from(e)))?;
-        let balance_currency = CurrencyCode::from_str(&balance_currency_str)
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(8, rusqlite::types::Type::Text, Box::from(e)))?;
+        let account_type = AccountType::from_str(&account_type_str).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(2, rusqlite::types::Type::Text, Box::from(e))
+        })?;
+        let currency = CurrencyCode::from_str(&currency_str).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::from(e))
+        })?;
+        let balance_amount = Decimal::from_str(&balance_amount_str).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(7, rusqlite::types::Type::Text, Box::from(e))
+        })?;
+        let balance_currency = CurrencyCode::from_str(&balance_currency_str).map_err(|e| {
+            rusqlite::Error::FromSqlConversionFailure(8, rusqlite::types::Type::Text, Box::from(e))
+        })?;
 
         let credit_limit = match (credit_limit_amount, credit_limit_currency) {
             (Some(amt), Some(cur)) => {
-                let amount = Decimal::from_str(&amt)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(9, rusqlite::types::Type::Text, Box::from(e)))?;
-                let currency = CurrencyCode::from_str(&cur)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(10, rusqlite::types::Type::Text, Box::from(e)))?;
+                let amount = Decimal::from_str(&amt).map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        9,
+                        rusqlite::types::Type::Text,
+                        Box::from(e),
+                    )
+                })?;
+                let currency = CurrencyCode::from_str(&cur).map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        10,
+                        rusqlite::types::Type::Text,
+                        Box::from(e),
+                    )
+                })?;
                 Some(Money::new(amount, currency))
             }
             _ => None,
@@ -60,7 +74,13 @@ impl<'a> SqliteAccountRepository<'a> {
         let interest_rate = interest_rate_str
             .map(|s| Decimal::from_str(&s))
             .transpose()
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(11, rusqlite::types::Type::Text, Box::from(e)))?;
+            .map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    11,
+                    rusqlite::types::Type::Text,
+                    Box::from(e),
+                )
+            })?;
 
         let parse_dt = |s: &str, col: usize| {
             DateTime::parse_from_rfc3339(s)
@@ -200,9 +220,7 @@ impl AccountRepository for SqliteAccountRepository<'_> {
     fn find_by_provider(&self, provider: &str) -> Result<Vec<Account>, DomainError> {
         self.db
             .conn()
-            .prepare(
-                "SELECT * FROM accounts WHERE external_provider = ?1 ORDER BY name",
-            )
+            .prepare("SELECT * FROM accounts WHERE external_provider = ?1 ORDER BY name")
             .map_err(|e| DomainError::Storage(format!("prepare find_by_provider: {e}")))?
             .query_map([provider], Self::row_to_account)
             .map_err(|e| DomainError::Storage(format!("find_by_provider: {e}")))?
@@ -448,9 +466,13 @@ mod tests {
         let repo = SqliteAccountRepository::new(&db);
 
         let mut simplefin_a = make_account("sf-1", "Chase", CurrencyCode::USD);
-        simplefin_a.link("simplefin".into(), "ext-1".into()).unwrap();
+        simplefin_a
+            .link("simplefin".into(), "ext-1".into())
+            .unwrap();
         let mut simplefin_b = make_account("sf-2", "Capital One", CurrencyCode::USD);
-        simplefin_b.link("simplefin".into(), "ext-2".into()).unwrap();
+        simplefin_b
+            .link("simplefin".into(), "ext-2".into())
+            .unwrap();
         let mut pluggy_a = make_account("pl-1", "Nubank", CurrencyCode::BRL);
         pluggy_a.link("pluggy".into(), "ext-3".into()).unwrap();
         let unlinked = make_account("unlinked-1", "Manual", CurrencyCode::USD);

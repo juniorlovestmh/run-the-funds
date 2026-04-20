@@ -102,19 +102,16 @@ fn resolve_target(
         (Some(_), Some(_), _) | (Some(_), _, Some(_)) => Err(DomainError::Validation(
             "pass either --id OR (--provider + --external-id), not both".into(),
         )),
-        (Some(id), None, None) => repo.find_by_id(&id)?.ok_or_else(|| {
-            DomainError::NotFound {
-                entity: "provider_connection".into(),
-                id,
-            }
+        (Some(id), None, None) => repo.find_by_id(&id)?.ok_or_else(|| DomainError::NotFound {
+            entity: "provider_connection".into(),
+            id,
         }),
         (None, Some(provider), Some(ext)) => {
-            repo.find_by_external_id(&provider, &ext)?.ok_or_else(|| {
-                DomainError::NotFound {
+            repo.find_by_external_id(&provider, &ext)?
+                .ok_or_else(|| DomainError::NotFound {
                     entity: "provider_connection".into(),
                     id: format!("{provider}:{ext}"),
-                }
-            })
+                })
         }
         (None, None, None) => Err(DomainError::Validation(
             "specify --id OR (--provider + --external-id)".into(),
@@ -127,7 +124,9 @@ fn resolve_target(
 
 fn print_table(views: &[ConnectionView]) {
     if views.is_empty() {
-        println!("No bank connections. Run `rtf teller connect` or `rtf pluggy connect` to link a bank.");
+        println!(
+            "No bank connections. Run `rtf teller connect` or `rtf pluggy connect` to link a bank."
+        );
         return;
     }
     println!(
@@ -171,7 +170,9 @@ mod tests {
             Some(institution.into()),
         )
         .unwrap();
-        SqliteProviderConnectionRepository::new(db).save(&c).unwrap();
+        SqliteProviderConnectionRepository::new(db)
+            .save(&c)
+            .unwrap();
         c.id
     }
 
@@ -206,13 +207,8 @@ mod tests {
     fn resolve_target_not_found_by_provider_external_id() {
         let db = Database::in_memory().unwrap();
         let repo = SqliteProviderConnectionRepository::new(&db);
-        let err = resolve_target(
-            &repo,
-            None,
-            Some("teller".into()),
-            Some("missing".into()),
-        )
-        .unwrap_err();
+        let err =
+            resolve_target(&repo, None, Some("teller".into()), Some("missing".into())).unwrap_err();
         assert!(matches!(err, DomainError::NotFound { .. }));
     }
 
@@ -242,10 +238,7 @@ mod tests {
     fn resolve_target_rejects_partial_provider_pair() {
         let db = Database::in_memory().unwrap();
         let repo = SqliteProviderConnectionRepository::new(&db);
-        assert!(
-            resolve_target(&repo, None, Some("teller".into()), None)
-                .is_err()
-        );
+        assert!(resolve_target(&repo, None, Some("teller".into()), None).is_err());
         assert!(resolve_target(&repo, None, None, Some("x".into())).is_err());
     }
 }

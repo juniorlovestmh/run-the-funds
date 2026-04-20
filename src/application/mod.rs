@@ -12,7 +12,7 @@ pub use categorization_service::{
     CategorizationService, CategorizeOptions, CategorizeReport, TransferPairingReport,
 };
 pub use currency_converter::{Conversion, CurrencyConverter};
-pub use monarch_sync_service::{MonarchSyncReport, MonarchSyncService, MONARCH_PROVIDER};
+pub use monarch_sync_service::{MONARCH_PROVIDER, MonarchSyncReport, MonarchSyncService};
 pub use spending_service::{SpendingOptions, SpendingReport, SpendingService};
 pub use split_service::{SplitAllocation, SplitService};
 pub use sync_service::{ProviderSyncReport, SyncService};

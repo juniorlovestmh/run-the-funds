@@ -44,11 +44,7 @@ impl Importer for OfxImporter {
         "ofx"
     }
 
-    fn import(
-        &self,
-        source: &Path,
-        account_id: &str,
-    ) -> Result<Vec<Transaction>, ImportError> {
+    fn import(&self, source: &Path, account_id: &str) -> Result<Vec<Transaction>, ImportError> {
         let bytes = fs::read(source).map_err(|e| ImportError::Io {
             path: source.display().to_string(),
             source: e,
@@ -147,12 +143,11 @@ impl Record {
             format: "ofx",
             detail: format!("STMTTRN {fitid} DTPOSTED too short: {dtposted}"),
         })?;
-        let date = NaiveDate::parse_from_str(date_slice, "%Y%m%d").map_err(|e| {
-            ImportError::Parse {
+        let date =
+            NaiveDate::parse_from_str(date_slice, "%Y%m%d").map_err(|e| ImportError::Parse {
                 format: "ofx",
                 detail: format!("STMTTRN {fitid} malformed DTPOSTED {dtposted}: {e}"),
-            }
-        })?;
+            })?;
         let amount = Decimal::from_str(trnamt.trim()).map_err(|e| ImportError::Parse {
             format: "ofx",
             detail: format!("STMTTRN {fitid} malformed TRNAMT {trnamt}: {e}"),
@@ -463,7 +458,10 @@ mod tests {
         );
         let f = write_temp(&content);
         let txns = OfxImporter::new().import(f.path(), "acc-001").unwrap();
-        let ids: Vec<&str> = txns.iter().filter_map(|t| t.external_id.as_deref()).collect();
+        let ids: Vec<&str> = txns
+            .iter()
+            .filter_map(|t| t.external_id.as_deref())
+            .collect();
         assert_eq!(ids, vec!["t1", "t2", "t3"]);
     }
 
@@ -629,7 +627,11 @@ mod tests {
         }
         let txns = OfxImporter::new().import(path, "acc-chase").unwrap();
 
-        assert_eq!(txns.len(), 3, "Chase QFX fixture has 3 synthetic transactions");
+        assert_eq!(
+            txns.len(),
+            3,
+            "Chase QFX fixture has 3 synthetic transactions"
+        );
         assert!(txns.iter().all(|t| t.external_id.is_some()));
         assert!(txns.iter().all(|t| t.amount.currency == CurrencyCode::USD));
         assert!(txns.iter().all(|t| t.account_id == "acc-chase"));
@@ -651,7 +653,11 @@ mod tests {
         let path = Path::new("tests/fixtures/nubank-sample.ofx");
         let txns = OfxImporter::new().import(path, "acc-nubank").unwrap();
 
-        assert_eq!(txns.len(), 3, "Nubank OFX fixture has 3 synthetic transactions");
+        assert_eq!(
+            txns.len(),
+            3,
+            "Nubank OFX fixture has 3 synthetic transactions"
+        );
         assert!(txns.iter().all(|t| t.external_id.is_some()));
         assert!(txns.iter().all(|t| t.amount.currency == CurrencyCode::BRL));
         assert!(txns.iter().all(|t| t.account_id == "acc-nubank"));
@@ -665,7 +671,13 @@ mod tests {
         assert_eq!(first.date, NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
         assert_eq!(first.amount.amount, dec!(2000.00));
         // Portuguese accents must round-trip cleanly (UTF-8 encoded file).
-        assert!(first.description.as_deref().unwrap().contains("Transferência"));
+        assert!(
+            first
+                .description
+                .as_deref()
+                .unwrap()
+                .contains("Transferência")
+        );
         assert!(first.description.as_deref().unwrap().contains("Câmbio"));
     }
 }
