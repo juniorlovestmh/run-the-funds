@@ -17,13 +17,13 @@ completed_at: 2026-04-20T11:04:41.926Z
 blocker_discovered: false
 ---
 
-# T03: Transaction splits: migration 008 + domain + SplitService + `rtf transaction-split` CLI.
+# T03: Transaction splits: migration 008 + domain + SplitService + `fintrack transaction-split` CLI.
 
-**Transaction splits: migration 008 + domain + SplitService + `rtf transaction-split` CLI.**
+**Transaction splits: migration 008 + domain + SplitService + `fintrack transaction-split` CLI.**
 
 ## What Happened
 
-Migration 008 created transaction_splits (id, transaction_id FK CASCADE, category_id FK, amount_value, amount_currency, notes). Domain TransactionSplit with validation (non-empty, non-zero amount, currency match). SplitService.split_transaction validates sum=abs(parent) with 0.01 tolerance, replaces existing splits atomically, clears parent category_id so the spending rollup expands splits not parents. CLI: `rtf transaction-split --id X --split cat_id:amount[:notes]` (multiple). 9 service tests + repo tests including CASCADE verification.
+Migration 008 created transaction_splits (id, transaction_id FK CASCADE, category_id FK, amount_value, amount_currency, notes). Domain TransactionSplit with validation (non-empty, non-zero amount, currency match). SplitService.split_transaction validates sum=abs(parent) with 0.01 tolerance, replaces existing splits atomically, clears parent category_id so the spending rollup expands splits not parents. CLI: `fintrack transaction-split --id X --split cat_id:amount[:notes]` (multiple). 9 service tests + repo tests including CASCADE verification.
 
 ## Verification
 

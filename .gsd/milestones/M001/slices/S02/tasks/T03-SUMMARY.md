@@ -24,7 +24,7 @@ blocker_discovered: false
 
 ## What Happened
 
-Wired the adapter + service + CLI so the full `rtf transactions import` flow is live.
+Wired the adapter + service + CLI so the full `fintrack transactions import` flow is live.
 
 **`TransactionService` signature** — now generic over both `TransactionRepository` and `AccountRepository` (as the plan specified). `new(txn_repo, account_repo)`. All callers (`src/cli/transactions.rs`) updated to pass both repos.
 

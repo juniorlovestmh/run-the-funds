@@ -15,13 +15,13 @@ completed_at: 2026-04-20T11:04:30.771Z
 blocker_discovered: false
 ---
 
-# T02: CategorizationService + `rtf categorize` with dry-run, reset, per-rule fire counts; fixed transactions.save UPSERT collision.
+# T02: CategorizationService + `fintrack categorize` with dry-run, reset, per-rule fire counts; fixed transactions.save UPSERT collision.
 
-**CategorizationService + `rtf categorize` with dry-run, reset, per-rule fire counts; fixed transactions.save UPSERT collision.**
+**CategorizationService + `fintrack categorize` with dry-run, reset, per-rule fire counts; fixed transactions.save UPSERT collision.**
 
 ## What Happened
 
-Added CategorizationService<R: RuleRepository, T: TransactionRepository> with .categorize(CategorizeOptions) returning CategorizeReport {categorized, skipped, reset, dry_run, rules_fired}. Opts support dry-run (no writes, same counts), reset (clear category_ids first), and per-account scoping. Critical storage fix: flipped transactions.save from plain INSERT to INSERT ... ON CONFLICT(id) DO UPDATE SET ... — without this, re-categorizing an existing row with the same (account_id, external_id) caused a UNIQUE constraint failure. CLI: `rtf categorize [--dry-run --reset --account-id]`. 9 service tests + 7 rule repo tests + storage roundtrip tests.
+Added CategorizationService<R: RuleRepository, T: TransactionRepository> with .categorize(CategorizeOptions) returning CategorizeReport {categorized, skipped, reset, dry_run, rules_fired}. Opts support dry-run (no writes, same counts), reset (clear category_ids first), and per-account scoping. Critical storage fix: flipped transactions.save from plain INSERT to INSERT ... ON CONFLICT(id) DO UPDATE SET ... — without this, re-categorizing an existing row with the same (account_id, external_id) caused a UNIQUE constraint failure. CLI: `fintrack categorize [--dry-run --reset --account-id]`. 9 service tests + 7 rule repo tests + storage roundtrip tests.
 
 ## Verification
 

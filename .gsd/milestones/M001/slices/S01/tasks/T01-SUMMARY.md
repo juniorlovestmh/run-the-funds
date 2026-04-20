@@ -35,11 +35,11 @@ blocker_discovered: false
 
 ## What Happened
 
-Created the rtf binary crate with full DDD-aligned module hierarchy: domain/ (account, transaction, category, currency, household), application/, infrastructure/ (storage, importer, exchange, sync_adapter), and cli/. Added all core dependencies (clap, rusqlite, rust_decimal, serde, chrono, uuid, thiserror). Scaffolded all domain entities with proper types — Account, Transaction, Category, CategoryGroup, Person, Money, CurrencyCode, AccountType, TransactionStatus, Relationship. Defined repository traits (AccountRepository, TransactionRepository, CategoryRepository) as adapter boundaries. Built clap CLI skeleton with accounts create/list subcommands. All modules wire together cleanly.
+Created the fintrack binary crate with full DDD-aligned module hierarchy: domain/ (account, transaction, category, currency, household), application/, infrastructure/ (storage, importer, exchange, sync_adapter), and cli/. Added all core dependencies (clap, rusqlite, rust_decimal, serde, chrono, uuid, thiserror). Scaffolded all domain entities with proper types — Account, Transaction, Category, CategoryGroup, Person, Money, CurrencyCode, AccountType, TransactionStatus, Relationship. Defined repository traits (AccountRepository, TransactionRepository, CategoryRepository) as adapter boundaries. Built clap CLI skeleton with accounts create/list subcommands. All modules wire together cleanly.
 
 ## Verification
 
-cargo build succeeds, cargo test passes (0 tests — scaffolding task), rtf --help shows correct CLI structure with accounts subcommand
+cargo build succeeds, cargo test passes (0 tests — scaffolding task), fintrack --help shows correct CLI structure with accounts subcommand
 
 ## Verification Evidence
 
@@ -47,7 +47,7 @@ cargo build succeeds, cargo test passes (0 tests — scaffolding task), rtf --he
 |---|---------|-----------|---------|----------|
 | 1 | `cargo build` | 0 | pass | 16620ms |
 | 2 | `cargo test` | 0 | pass | 2310ms |
-| 3 | `./target/debug/rtf --help` | 0 | pass | 50ms |
+| 3 | `./target/debug/fintrack --help` | 0 | pass | 50ms |
 
 ## Deviations
 

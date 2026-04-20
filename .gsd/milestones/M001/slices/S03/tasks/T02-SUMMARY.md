@@ -21,9 +21,9 @@ completed_at: 2026-04-19T20:31:10.148Z
 blocker_discovered: false
 ---
 
-# T02: CurrencyConverter service with cache-first + fetch-on-miss + up-to-7-day walk-back; `rtf convert` CLI subcommand with full JSON envelope including rate_date and fallback_reason.
+# T02: CurrencyConverter service with cache-first + fetch-on-miss + up-to-7-day walk-back; `fintrack convert` CLI subcommand with full JSON envelope including rate_date and fallback_reason.
 
-**CurrencyConverter service with cache-first + fetch-on-miss + up-to-7-day walk-back; `rtf convert` CLI subcommand with full JSON envelope including rate_date and fallback_reason.**
+**CurrencyConverter service with cache-first + fetch-on-miss + up-to-7-day walk-back; `fintrack convert` CLI subcommand with full JSON envelope including rate_date and fallback_reason.**
 
 ## What Happened
 
@@ -42,7 +42,7 @@ blocker_discovered: false
 **`Conversion` struct** — `{ amount: Decimal, currency: CurrencyCode, rate: Decimal, rate_date: NaiveDate, source: String, fallback_reason: Option<String> }`. `Serialize`-able. Re-exported from `src/application/mod.rs` alongside `CurrencyConverter`.
 
 **CLI (`src/cli/convert.rs` + wiring in `cli/mod.rs` + `main.rs`):**
-- `rtf convert <amount> <from> --to <currency> [--date YYYY-MM-DD]`.
+- `fintrack convert <amount> <from> --to <currency> [--date YYYY-MM-DD]`.
 - Amount parsed via `Decimal::from_str` (preserves sign; supports decimals).
 - `from` + `to` parsed as `CurrencyCode` (USD/BRL, case-insensitive).
 - `--date` optional; defaults to today via `chrono::Local::now().date_naive()`.

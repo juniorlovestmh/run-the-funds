@@ -18,6 +18,8 @@ impl<'a> SqliteCategoryRepository<'a> {
     fn row_to_group(row: &rusqlite::Row) -> rusqlite::Result<CategoryGroup> {
         let id: String = row.get("id")?;
         let name: String = row.get("name")?;
+        let external_id: Option<String> = row.get("external_id")?;
+        let external_provider: Option<String> = row.get("external_provider")?;
         let created_at_str: String = row.get("created_at")?;
         let created_at = DateTime::parse_from_rfc3339(&created_at_str)
             .map(|dt| dt.with_timezone(&Utc))
@@ -31,6 +33,8 @@ impl<'a> SqliteCategoryRepository<'a> {
         Ok(CategoryGroup {
             id,
             name,
+            external_id,
+            external_provider,
             created_at,
         })
     }
@@ -39,6 +43,8 @@ impl<'a> SqliteCategoryRepository<'a> {
         let id: String = row.get("id")?;
         let group_id: String = row.get("group_id")?;
         let name: String = row.get("name")?;
+        let external_id: Option<String> = row.get("external_id")?;
+        let external_provider: Option<String> = row.get("external_provider")?;
         let created_at_str: String = row.get("created_at")?;
         let created_at = DateTime::parse_from_rfc3339(&created_at_str)
             .map(|dt| dt.with_timezone(&Utc))
@@ -53,6 +59,8 @@ impl<'a> SqliteCategoryRepository<'a> {
             id,
             group_id,
             name,
+            external_id,
+            external_provider,
             created_at,
         })
     }
@@ -63,9 +71,15 @@ impl CategoryRepository for SqliteCategoryRepository<'_> {
         self.db
             .conn()
             .execute(
-                "INSERT OR REPLACE INTO category_groups (id, name, created_at)
-                 VALUES (?1, ?2, ?3)",
-                rusqlite::params![group.id, group.name, group.created_at.to_rfc3339(),],
+                "INSERT OR REPLACE INTO category_groups (id, name, external_id, external_provider, created_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![
+                    group.id,
+                    group.name,
+                    group.external_id,
+                    group.external_provider,
+                    group.created_at.to_rfc3339(),
+                ],
             )
             .map_err(|e| DomainError::Storage(format!("save group: {e}")))?;
         Ok(())
@@ -75,12 +89,14 @@ impl CategoryRepository for SqliteCategoryRepository<'_> {
         self.db
             .conn()
             .execute(
-                "INSERT OR REPLACE INTO categories (id, group_id, name, created_at)
-                 VALUES (?1, ?2, ?3, ?4)",
+                "INSERT OR REPLACE INTO categories (id, group_id, name, external_id, external_provider, created_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 rusqlite::params![
                     category.id,
                     category.group_id,
                     category.name,
+                    category.external_id,
+                    category.external_provider,
                     category.created_at.to_rfc3339(),
                 ],
             )
@@ -106,6 +122,38 @@ impl CategoryRepository for SqliteCategoryRepository<'_> {
             .query_row([id], Self::row_to_category)
             .optional()
             .map_err(|e| DomainError::Storage(format!("find_category: {e}")))
+    }
+
+    fn find_group_by_external(
+        &self,
+        provider: &str,
+        external_id: &str,
+    ) -> Result<Option<CategoryGroup>, DomainError> {
+        self.db
+            .conn()
+            .prepare(
+                "SELECT * FROM category_groups WHERE external_provider = ?1 AND external_id = ?2",
+            )
+            .map_err(|e| DomainError::Storage(format!("prepare: {e}")))?
+            .query_row([provider, external_id], Self::row_to_group)
+            .optional()
+            .map_err(|e| DomainError::Storage(format!("find_group_by_external: {e}")))
+    }
+
+    fn find_category_by_external(
+        &self,
+        provider: &str,
+        external_id: &str,
+    ) -> Result<Option<Category>, DomainError> {
+        self.db
+            .conn()
+            .prepare(
+                "SELECT * FROM categories WHERE external_provider = ?1 AND external_id = ?2",
+            )
+            .map_err(|e| DomainError::Storage(format!("prepare: {e}")))?
+            .query_row([provider, external_id], Self::row_to_category)
+            .optional()
+            .map_err(|e| DomainError::Storage(format!("find_category_by_external: {e}")))
     }
 
     fn find_categories_by_group(&self, group_id: &str) -> Result<Vec<Category>, DomainError> {

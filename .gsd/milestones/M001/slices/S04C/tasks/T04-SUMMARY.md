@@ -22,9 +22,9 @@ completed_at: 2026-04-19T23:52:21.473Z
 blocker_discovered: false
 ---
 
-# T04: `rtf pluggy setup` takes per-app creds only; `rtf pluggy connect` mints a connect_token via Pluggy's auth+connect_token endpoints, runs the widget in the browser, captures itemId into provider_connections. Sync iterates items same as Teller.
+# T04: `fintrack pluggy setup` takes per-app creds only; `fintrack pluggy connect` mints a connect_token via Pluggy's auth+connect_token endpoints, runs the widget in the browser, captures itemId into provider_connections. Sync iterates items same as Teller.
 
-**`rtf pluggy setup` takes per-app creds only; `rtf pluggy connect` mints a connect_token via Pluggy's auth+connect_token endpoints, runs the widget in the browser, captures itemId into provider_connections. Sync iterates items same as Teller.**
+**`fintrack pluggy setup` takes per-app creds only; `fintrack pluggy connect` mints a connect_token via Pluggy's auth+connect_token endpoints, runs the widget in the browser, captures itemId into provider_connections. Sync iterates items same as Teller.**
 
 ## What Happened
 
@@ -32,7 +32,7 @@ Pluggy refactor mirrors Teller's pattern end-to-end.
 
 **`pluggy setup` refactor.** Drops `--item-id`. New signature: `--client-id <ID> --client-secret <SECRET>`. Stores only per-app data in `provider_credentials[provider='pluggy']`. Per-bank items come through `pluggy connect`.
 
-**`rtf pluggy connect`.** Flow:
+**`fintrack pluggy connect`.** Flow:
 1. Load `client_id` + `client_secret` from `provider_credentials`. Clear error if missing.
 2. POST `https://api.pluggy.ai/auth` with `{clientId, clientSecret}` → response `{apiKey}`. `fetch_api_key` helper.
 3. POST `https://api.pluggy.ai/connect_token` with `X-API-KEY` header, empty body → response `{accessToken}`. `fetch_connect_token` helper. This is the short-lived token the widget consumes (different from the long-lived apiKey).

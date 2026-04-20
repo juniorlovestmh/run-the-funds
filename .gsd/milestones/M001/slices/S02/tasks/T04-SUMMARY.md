@@ -21,7 +21,7 @@ blocker_discovered: false
 
 ## What Happened
 
-**`tests/import_demo.rs`** — a single `end_to_end_import_demo` integration test that shells out to the binary via `env!("CARGO_BIN_EXE_rtf")` and a temp SQLite DB (`TempDir`), exercising:
+**`tests/import_demo.rs`** — a single `end_to_end_import_demo` integration test that shells out to the binary via `env!("CARGO_BIN_EXE_fintrack")` and a temp SQLite DB (`TempDir`), exercising:
 
 1. `accounts create` for Chase (USD) and Nubank (BRL), capturing each account id from the JSON envelope.
 2. `transactions import --format ofx --file chase-sample.qfx --account-id <chase>` — asserts `imported == 523`, `duplicates == 0`, `format == "ofx"`.

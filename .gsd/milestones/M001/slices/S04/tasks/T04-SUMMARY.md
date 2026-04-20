@@ -9,7 +9,7 @@ key_files:
 key_decisions:
   - UnifiedSyncReport with Option<Provider> slots + errors array — cleanly encodes both 'not configured' (null) and 'tried and failed' (in errors) without conflating them.
   - run_*_inline helpers that distinguish Ok(None) = not configured from Err = real failure — lets run_unified collect both cleanly and drive its exit-code logic.
-  - Exit 0 as long as at least one provider succeeded, even if the other errored — matches the user expectation that a one-off outage at SimpleFIN shouldn't make rtf sync return non-zero when Pluggy just worked.
+  - Exit 0 as long as at least one provider succeeded, even if the other errored — matches the user expectation that a one-off outage at SimpleFIN shouldn't make fintrack sync return non-zero when Pluggy just worked.
   - Mix of integration + service tests rather than trying to stand up a mock HTTP server — tests/sync_demo.rs covers CLI error paths and roundtrips; service-layer tests from T02/T03 cover the sync happy path with FakeAdapter. Live smokes fill the real-API gap via opt-in runs.
   - Documented the credentials-in-DB revision in S04-UAT's roadmap table rather than silently changing the roadmap — keeps the spec change visible to future readers.
 duration: 
@@ -18,9 +18,9 @@ completed_at: 2026-04-19T21:26:49.497Z
 blocker_discovered: false
 ---
 
-# T04: Unified `rtf sync` runs SimpleFIN + Pluggy with per-provider error isolation and an aggregate SyncReport; tests/sync_demo.rs covers 8 CLI error and roundtrip scenarios + 2 ignored live smokes; S04-UAT.md documents the full user-facing flow.
+# T04: Unified `fintrack sync` runs SimpleFIN + Pluggy with per-provider error isolation and an aggregate SyncReport; tests/sync_demo.rs covers 8 CLI error and roundtrip scenarios + 2 ignored live smokes; S04-UAT.md documents the full user-facing flow.
 
-**Unified `rtf sync` runs SimpleFIN + Pluggy with per-provider error isolation and an aggregate SyncReport; tests/sync_demo.rs covers 8 CLI error and roundtrip scenarios + 2 ignored live smokes; S04-UAT.md documents the full user-facing flow.**
+**Unified `fintrack sync` runs SimpleFIN + Pluggy with per-provider error isolation and an aggregate SyncReport; tests/sync_demo.rs covers 8 CLI error and roundtrip scenarios + 2 ignored live smokes; S04-UAT.md documents the full user-facing flow.**
 
 ## What Happened
 
@@ -36,7 +36,7 @@ blocker_discovered: false
 - `sync_malformed_since_errors` — `--since not-a-date` → structured error with format hint.
 - `accounts_link_roundtrips_through_cli` — create → link → relink-rejected-without-force → relink-with-force all via the real binary.
 - `accounts_link_rejects_unknown_provider` — bogus provider string rejected at the CLI boundary.
-- `pluggy_setup_stores_credentials` — setup command roundtrips through the DB (verified via direct `rtf::domain::credentials` lookup).
+- `pluggy_setup_stores_credentials` — setup command roundtrips through the DB (verified via direct `fintrack::domain::credentials` lookup).
 - `#[ignore] live_simplefin_setup_smoke` — real `simplefin setup` with `SIMPLEFIN_SETUP_TOKEN` env. Just asserts the envelope shape; a full sync-against-linked-account flow is beyond the smoke.
 - `#[ignore] live_pluggy_sync_smoke` — setup + sync against live Pluggy with `PLUGGY_CLIENT_ID/SECRET/ITEM_ID`. Since no accounts are locally linked during the smoke, asserts `accounts_synced: 0` — confirms the auth flow + HTTP path + DB write don't explode.
 

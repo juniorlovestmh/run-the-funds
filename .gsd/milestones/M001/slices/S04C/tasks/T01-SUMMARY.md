@@ -28,9 +28,9 @@ completed_at: 2026-04-19T22:56:34.976Z
 blocker_discovered: false
 ---
 
-# T01: provider_connections table + domain + SQLite repo + `rtf connections list` CLI; migration 006 auto-splits existing Teller access_token into a connection row without data loss; verified against user's real DB.
+# T01: provider_connections table + domain + SQLite repo + `fintrack connections list` CLI; migration 006 auto-splits existing Teller access_token into a connection row without data loss; verified against user's real DB.
 
-**provider_connections table + domain + SQLite repo + `rtf connections list` CLI; migration 006 auto-splits existing Teller access_token into a connection row without data loss; verified against user's real DB.**
+**provider_connections table + domain + SQLite repo + `fintrack connections list` CLI; migration 006 auto-splits existing Teller access_token into a connection row without data loss; verified against user's real DB.**
 
 ## What Happened
 
@@ -51,25 +51,25 @@ Foundation layer for S04C multi-bank support.
 - Timestamp parser accepts both RFC3339 (what our repo writes) and naive `YYYY-MM-DD HH:MM:SS` (what older SQLite `datetime('now')` produces) — defensive for any data that was written pre-migration-fix.
 - Tests: save+find_by_provider across both providers, UPSERT behavior, find_by_external_id per-provider scoping, find_all ordering, delete removal, and a migration-006 roundtrip that seeds a legacy-shaped credentials row and verifies the split.
 
-**CLI — `rtf connections list [--format json|table]`** (`src/cli/connections.rs`):
+**CLI — `fintrack connections list [--format json|table]`** (`src/cli/connections.rs`):
 - Read-only view over `provider_connections`. Never exposes `data` (secrets live there).
 - `ConnectionView` projection: `{id, provider, external_id, institution_name, created_at, updated_at}`.
 - Table form truncates long external_ids so the human-readable output stays on-screen; JSON form prints full values.
 
-**Live DB verification:** ran the new `rtf connections list --format json` against the user's real `~/rtf.db` post-migration. One Teller connection row present with the legacy access_token as external_id, labeled "Legacy (re-run `rtf teller connect`)". The 524 transactions from S04B remain in the DB (transaction rows are unaffected — linkage is via `account_id`, not through `provider_connections`).
+**Live DB verification:** ran the new `fintrack connections list --format json` against the user's real `~/fintrack.db` post-migration. One Teller connection row present with the legacy access_token as external_id, labeled "Legacy (re-run `fintrack teller connect`)". The 524 transactions from S04B remain in the DB (transaction rows are unaffected — linkage is via `account_id`, not through `provider_connections`).
 
 **Test totals:** 287 unit + 3 convert_demo + 1 import_demo + 11 sync_demo = **302 passing**, 4 ignored (live smokes), 0 failed. Up from 293 after S04B — +9 new (6 repo + 3 domain).
 
 ## Verification
 
-`cargo test` → 302 passing, 4 ignored, 0 failed. `cargo build --release` → clean. Real-DB smoke: `rtf connections list --format json` against `~/rtf.db` returns one Teller row auto-migrated from S04B's single-enrollment storage.
+`cargo test` → 302 passing, 4 ignored, 0 failed. `cargo build --release` → clean. Real-DB smoke: `fintrack connections list --format json` against `~/fintrack.db` returns one Teller row auto-migrated from S04B's single-enrollment storage.
 
 ## Verification Evidence
 
 | # | Command | Exit Code | Verdict | Duration |
 |---|---------|-----------|---------|----------|
 | 1 | `cargo test` | 0 | pass | 370ms |
-| 2 | `rtf connections list --format json` | 0 | pass | 50ms |
+| 2 | `fintrack connections list --format json` | 0 | pass | 50ms |
 
 ## Deviations
 

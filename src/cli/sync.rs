@@ -7,16 +7,19 @@
 use chrono::NaiveDate;
 use serde::Serialize;
 
-use crate::application::{ProviderSyncReport, SyncService};
+use crate::application::{MonarchSyncReport, MonarchSyncService, ProviderSyncReport, SyncService};
 use crate::domain::connections::ProviderConnectionRepository;
 use crate::domain::credentials::ProviderCredentialsRepository;
 use crate::domain::error::DomainError;
 use crate::infrastructure::http::UreqHttpClient;
 use crate::infrastructure::storage::{
-    Database, SqliteAccountRepository, SqliteProviderConnectionRepository,
-    SqliteProviderCredentialsRepository, SqliteTransactionRepository,
+    Database, SqliteAccountRepository, SqliteCategoryRepository,
+    SqliteProviderConnectionRepository, SqliteProviderCredentialsRepository, SqliteTagRepository,
+    SqliteTransactionRepository,
 };
-use crate::infrastructure::sync_adapter::{PluggyAdapter, SimpleFinAdapter, TellerAdapter};
+use crate::infrastructure::sync_adapter::{
+    MonarchAdapter, PluggyAdapter, SimpleFinAdapter, TellerAdapter,
+};
 
 use super::response::{CliResponse, ErrorResponse};
 
@@ -29,6 +32,7 @@ pub struct UnifiedSyncReport {
     pub simplefin: Option<ProviderSyncReport>,
     pub pluggy: Option<ProviderSyncReport>,
     pub teller: Option<ProviderSyncReport>,
+    pub monarch: Option<MonarchSyncReport>,
     pub errors: Vec<SyncErrorEntry>,
 }
 
@@ -58,9 +62,10 @@ pub fn handle_sync(db: &Database, provider: Option<String>, since: Option<String
         Some("simplefin") => run_simplefin(db, since),
         Some("pluggy") => run_pluggy(db, since),
         Some("teller") => run_teller(db, since),
+        Some("monarch") => run_monarch(db, since),
         Some(other) => {
             print_error(&format!(
-                "unknown provider \"{other}\" (expected \"simplefin\", \"pluggy\", or \"teller\")"
+                "unknown provider \"{other}\" (expected \"monarch\", \"simplefin\", \"pluggy\", or \"teller\")"
             ));
             std::process::exit(1);
         }
@@ -68,11 +73,42 @@ pub fn handle_sync(db: &Database, provider: Option<String>, since: Option<String
     }
 }
 
+fn run_monarch(db: &Database, since: Option<NaiveDate>) {
+    match run_monarch_inline(db, since) {
+        Ok(report) => {
+            let response = CliResponse::ok(report);
+            println!("{}", serde_json::to_string_pretty(&response).unwrap());
+        }
+        Err(e) => {
+            print_error(&e.to_string());
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Runs the Monarch sync via the installed `mmoney` CLI. No stored
+/// credentials needed — mmoney handles auth itself (macOS keychain). If
+/// mmoney is missing or not logged in, the adapter surfaces a clear error.
+fn run_monarch_inline(
+    db: &Database,
+    since: Option<NaiveDate>,
+) -> Result<MonarchSyncReport, DomainError> {
+    let adapter = MonarchAdapter::subprocess();
+    let svc = MonarchSyncService::new(
+        SqliteTransactionRepository::new(db),
+        SqliteAccountRepository::new(db),
+        SqliteCategoryRepository::new(db),
+        SqliteTagRepository::new(db),
+    );
+    svc.run(&adapter, since)
+}
+
 fn run_unified(db: &Database, since: Option<NaiveDate>) {
     let mut report = UnifiedSyncReport {
         simplefin: None,
         pluggy: None,
         teller: None,
+        monarch: None,
         errors: Vec::new(),
     };
 
@@ -103,18 +139,25 @@ fn run_unified(db: &Database, since: Option<NaiveDate>) {
         }),
     }
 
+    // Monarch is NOT auto-run in the unified path. mmoney is a system-wide
+    // tool holding the user's global auth — pulling it silently on every
+    // `rtf sync` is surprising behavior. Users opt in explicitly via
+    // `rtf sync --provider monarch`.
+
     if report.simplefin.is_none()
         && report.pluggy.is_none()
         && report.teller.is_none()
         && report.errors.is_empty()
     {
         print_error(
-            "no bank-sync providers configured; run `rtf simplefin setup <token>`, `rtf pluggy setup ...`, or `rtf teller setup --access-token <token>` first",
+            "no bank-sync providers configured; run `rtf simplefin setup <token>`, `rtf pluggy setup ...`, `rtf teller setup --access-token <token>`, or for Monarch: `mmoney auth login` then `rtf sync --provider monarch`",
         );
         std::process::exit(1);
     }
 
-    let any_success = report.simplefin.is_some() || report.pluggy.is_some() || report.teller.is_some();
+    let any_success = report.simplefin.is_some()
+        || report.pluggy.is_some()
+        || report.teller.is_some();
     let response = CliResponse::ok(report);
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
 

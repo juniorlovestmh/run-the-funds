@@ -8,6 +8,8 @@ pub enum AccountType {
     Savings,
     CreditCard,
     Loan,
+    Brokerage,
+    Other,
 }
 
 impl fmt::Display for AccountType {
@@ -17,6 +19,8 @@ impl fmt::Display for AccountType {
             AccountType::Savings => write!(f, "savings"),
             AccountType::CreditCard => write!(f, "credit_card"),
             AccountType::Loan => write!(f, "loan"),
+            AccountType::Brokerage => write!(f, "brokerage"),
+            AccountType::Other => write!(f, "other"),
         }
     }
 }
@@ -30,6 +34,10 @@ impl std::str::FromStr for AccountType {
             "savings" => Ok(AccountType::Savings),
             "credit_card" | "creditcard" | "credit-card" => Ok(AccountType::CreditCard),
             "loan" => Ok(AccountType::Loan),
+            "brokerage" | "investment" | "roth" | "ira" | "crypto" | "cryptocurrency" => {
+                Ok(AccountType::Brokerage)
+            }
+            "other" | "vehicle" | "car" | "real_estate" => Ok(AccountType::Other),
             other => Err(format!("unknown account type: {other}")),
         }
     }
@@ -70,7 +78,7 @@ mod tests {
 
     #[test]
     fn parse_unknown_fails() {
-        let err = "investment".parse::<AccountType>().unwrap_err();
+        let err = "flarglebargle".parse::<AccountType>().unwrap_err();
         assert!(err.contains("unknown account type"));
     }
 

@@ -41,23 +41,23 @@ T02 landed three things: (1) mTLS support for Teller's Developer tier, (2) Telle
 - `UreqHttpClient` grew an `agent: ureq::Agent` field; all four trait methods now call `self.agent.get(...)` / `self.agent.post(...)`. Side-effect: `UreqHttpClient;` as a unit-struct constructor stopped working at 7 call sites across `sync.rs`, `simplefin.rs`, and `bcb_ptax.rs` — replaced with `UreqHttpClient::new()`.
 
 **Teller credentials extension.**
-- `rtf teller setup` grew two optional flags: `--cert <path>` and `--key <path>`. Provided together: PEM contents read at setup and embedded in the credentials JSON as `cert_pem` + `key_pem` (self-contained DB; source files can be deleted). Provided neither: stays Bearer-only for Sandbox. Partial args (one without the other): rejected with a clear validation error.
+- `fintrack teller setup` grew two optional flags: `--cert <path>` and `--key <path>`. Provided together: PEM contents read at setup and embedded in the credentials JSON as `cert_pem` + `key_pem` (self-contained DB; source files can be deleted). Provided neither: stays Bearer-only for Sandbox. Partial args (one without the other): rejected with a clear validation error.
 - `cli/sync.rs::run_teller` + `run_teller_inline` load credentials, call `build_teller_http` which picks `UreqHttpClient::with_mtls(...)` when cert+key are present or `UreqHttpClient::new()` otherwise. Adapter never cares which.
 
 **Teller auth-header fix.**
 - T01 shipped with `Authorization: Bearer <token>`. Teller actually uses HTTP Basic with the token as username and empty password (per their docs `-u "token_xxx:"`). First live sync returned 401; fixed by encoding `Basic <base64("token:")>` via `get_with_headers`. Updated the matching unit test to assert Basic-with-empty-password instead of Bearer.
 
 **Live verification (user's real Chase account).**
-1. `rtf teller setup --access-token token_2czxt73go... --cert ~/Downloads/teller/certificate.pem --key ~/Downloads/teller/private_key.pem` → message "Teller configured with mTLS (Development/Production tier)".
+1. `fintrack teller setup --access-token token_2czxt73go... --cert ~/Downloads/teller/certificate.pem --key ~/Downloads/teller/private_key.pem` → message "Teller configured with mTLS (Development/Production tier)".
 2. `curl --cert ... --key ... -u "token_...:" https://api.teller.io/accounts` → one Chase account (USD, acc_pr9ubcf1l6jujrg5m8000, "Day Spending", ending 8332 — same real account as S02's QFX fixture, now via Teller instead of manual download).
-3. `rtf accounts create --name "Chase Day Spending"` → new local account.
-4. `rtf accounts link --provider teller --external-id acc_pr9ubcf1l6jujrg5m8000`.
-5. `rtf sync --provider teller` → **524 transactions imported in ~2.8s**, 2-year window (2024-04-19 → 2026-04-19).
-6. `rtf sync --provider teller` (immediate re-run) → `imported:0, duplicates:0` (last_sync_at=today, Teller returns nothing — proper incremental).
-7. `rtf sync --provider teller --since 2024-04-19` (force full re-pull) → `imported:0, duplicates:524` (dedup via migration 002's partial unique index).
-8. `rtf transactions list --format json` → all 524 rows present; first row 2026-04-18 Bull & Bowtie -$10 with correct external_id, payee, description, signed amount; all 524 carry S03's `rate_status: "same_currency"`.
+3. `fintrack accounts create --name "Chase Day Spending"` → new local account.
+4. `fintrack accounts link --provider teller --external-id acc_pr9ubcf1l6jujrg5m8000`.
+5. `fintrack sync --provider teller` → **524 transactions imported in ~2.8s**, 2-year window (2024-04-19 → 2026-04-19).
+6. `fintrack sync --provider teller` (immediate re-run) → `imported:0, duplicates:0` (last_sync_at=today, Teller returns nothing — proper incremental).
+7. `fintrack sync --provider teller --since 2024-04-19` (force full re-pull) → `imported:0, duplicates:524` (dedup via migration 002's partial unique index).
+8. `fintrack transactions list --format json` → all 524 rows present; first row 2026-04-18 Bull & Bowtie -$10 with correct external_id, payee, description, signed amount; all 524 carry S03's `rate_status: "same_currency"`.
 
-**S04B-UAT.md** (`.gsd/milestones/M001/slices/S04B/S04B-UAT.md`) mirrors the S04 shape with 9 scenarios + Roadmap coverage table. Documents the rollup fixes (HTTP body, mTLS, Teller auth) in a dedicated section. Flags the biggest remaining UX gap: `rtf teller connect` — a browser-launching OAuth-style callback flow that would eliminate the "user pastes a token" step. Filed as a future slice.
+**S04B-UAT.md** (`.gsd/milestones/M001/slices/S04B/S04B-UAT.md`) mirrors the S04 shape with 9 scenarios + Roadmap coverage table. Documents the rollup fixes (HTTP body, mTLS, Teller auth) in a dedicated section. Flags the biggest remaining UX gap: `fintrack teller connect` — a browser-launching OAuth-style callback flow that would eliminate the "user pastes a token" step. Filed as a future slice.
 
 **Test totals:** 278 unit + 3 convert_demo + 1 import_demo + 11 sync_demo = **293 passing**, 5 ignored, 0 failed.
 
@@ -65,16 +65,16 @@ T02 landed three things: (1) mTLS support for Teller's Developer tier, (2) Telle
 
 ## Verification
 
-Live: `rtf sync --provider teller` → 524 transactions imported from real Chase account via mTLS in 2.8s. Re-run: 0/0 (incremental). Forced re-pull: 0 imported, 524 duplicates (dedup). 524 rows round-trip cleanly through `rtf transactions list --format json`. `cargo test`: 293 passing, 5 ignored, 0 failed.
+Live: `fintrack sync --provider teller` → 524 transactions imported from real Chase account via mTLS in 2.8s. Re-run: 0/0 (incremental). Forced re-pull: 0 imported, 524 duplicates (dedup). 524 rows round-trip cleanly through `fintrack transactions list --format json`. `cargo test`: 293 passing, 5 ignored, 0 failed.
 
 ## Verification Evidence
 
 | # | Command | Exit Code | Verdict | Duration |
 |---|---------|-----------|---------|----------|
-| 1 | `rtf teller setup --cert ... --key ... --access-token ...` | 0 | pass | 50ms |
-| 2 | `rtf sync --provider teller` | 0 | pass | 2800ms |
-| 3 | `rtf sync --provider teller (re-run)` | 0 | pass | 500ms |
-| 4 | `rtf sync --provider teller --since 2024-04-19` | 0 | pass | 2900ms |
+| 1 | `fintrack teller setup --cert ... --key ... --access-token ...` | 0 | pass | 50ms |
+| 2 | `fintrack sync --provider teller` | 0 | pass | 2800ms |
+| 3 | `fintrack sync --provider teller (re-run)` | 0 | pass | 500ms |
+| 4 | `fintrack sync --provider teller --since 2024-04-19` | 0 | pass | 2900ms |
 | 5 | `cargo test` | 0 | pass | 330ms |
 
 ## Deviations
@@ -83,7 +83,7 @@ Plan assumed Teller Bearer auth would work for live-test. It didn't \u2014 Telle
 
 ## Known Issues
 
-"Biggest remaining UX gap: user has to obtain the Teller enrollment access token externally (via their own app or curl against Teller's connect_token endpoint) before running `teller setup`. A proper `rtf teller connect` command that spawns a local callback server + opens a browser to Teller Connect + captures the token automatically is the right fix. Filed as a follow-up slice \u2014 not blocking day-one sync functionality, but will significantly improve first-time setup."
+"Biggest remaining UX gap: user has to obtain the Teller enrollment access token externally (via their own app or curl against Teller's connect_token endpoint) before running `teller setup`. A proper `fintrack teller connect` command that spawns a local callback server + opens a browser to Teller Connect + captures the token automatically is the right fix. Filed as a follow-up slice \u2014 not blocking day-one sync functionality, but will significantly improve first-time setup."
 
 ## Files Created/Modified
 

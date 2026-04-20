@@ -8,6 +8,8 @@ pub struct Category {
     pub id: String,
     pub group_id: String,
     pub name: String,
+    pub external_id: Option<String>,
+    pub external_provider: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -25,8 +27,23 @@ impl Category {
             id,
             group_id,
             name,
+            external_id: None,
+            external_provider: None,
             created_at: Utc::now(),
         })
+    }
+
+    pub fn from_external(
+        id: String,
+        group_id: String,
+        name: String,
+        external_provider: String,
+        external_id: String,
+    ) -> Result<Self, DomainError> {
+        let mut c = Self::new(id, group_id, name)?;
+        c.external_id = Some(external_id);
+        c.external_provider = Some(external_provider);
+        Ok(c)
     }
 }
 
@@ -40,6 +57,7 @@ mod tests {
         assert_eq!(cat.id, "cat-001");
         assert_eq!(cat.group_id, "grp-food");
         assert_eq!(cat.name, "Groceries");
+        assert!(cat.external_id.is_none());
     }
 
     #[test]
@@ -50,6 +68,20 @@ mod tests {
     #[test]
     fn new_rejects_empty_group_id() {
         assert!(Category::new("cat-001".into(), "".into(), "Groceries".into()).is_err());
+    }
+
+    #[test]
+    fn from_external_captures_provenance() {
+        let c = Category::from_external(
+            "cat-001".into(),
+            "grp-food".into(),
+            "Groceries".into(),
+            "monarch".into(),
+            "monarch-c-123".into(),
+        )
+        .unwrap();
+        assert_eq!(c.external_provider.as_deref(), Some("monarch"));
+        assert_eq!(c.external_id.as_deref(), Some("monarch-c-123"));
     }
 
     #[test]

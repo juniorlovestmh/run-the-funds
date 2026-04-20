@@ -18,9 +18,9 @@ completed_at: 2026-04-20T00:03:38.248Z
 blocker_discovered: false
 ---
 
-# T01: `rtf connections remove --id <uuid>` and `--provider <p> --external-id <id>` CLI commands; added find_by_id to the repo; 7 unit tests; live-verified by cleaning the Legacy Teller row from the user's real DB.
+# T01: `fintrack connections remove --id <uuid>` and `--provider <p> --external-id <id>` CLI commands; added find_by_id to the repo; 7 unit tests; live-verified by cleaning the Legacy Teller row from the user's real DB.
 
-**`rtf connections remove --id <uuid>` and `--provider <p> --external-id <id>` CLI commands; added find_by_id to the repo; 7 unit tests; live-verified by cleaning the Legacy Teller row from the user's real DB.**
+**`fintrack connections remove --id <uuid>` and `--provider <p> --external-id <id>` CLI commands; added find_by_id to the repo; 7 unit tests; live-verified by cleaning the Legacy Teller row from the user's real DB.**
 
 ## What Happened
 
@@ -39,9 +39,9 @@ Not-found → `DomainError::NotFound`, exit 1.
 
 **Tests (+7):** resolve_target happy paths (by id, by provider+external_id), 2× not-found cases, 3× validation errors (both groups, no args, partial provider pair).
 
-**Live verification:** ran `rtf connections remove --provider teller --external-id token_2czxt73goplp3kmpfogkbj53vm` against user's real DB to delete the Legacy row from S04C's migration 006. Confirmed via `connections list` that only the fresh Capital One enrollment remains. 1,508 real transactions across all 6 linked accounts remained intact — deletion of a provider_connections row does NOT cascade to transactions (they're keyed to the local account_id, independent of the enrollment metadata).
+**Live verification:** ran `fintrack connections remove --provider teller --external-id token_2czxt73goplp3kmpfogkbj53vm` against user's real DB to delete the Legacy row from S04C's migration 006. Confirmed via `connections list` that only the fresh Capital One enrollment remains. 1,508 real transactions across all 6 linked accounts remained intact — deletion of a provider_connections row does NOT cascade to transactions (they're keyed to the local account_id, independent of the enrollment metadata).
 
-**User follow-up noted:** sync for the Chase account will need a fresh `rtf teller connect` for Chase, since the Legacy-token-based connection is now gone. Existing Chase transactions in the DB stay put; only future syncs need the new enrollment.
+**User follow-up noted:** sync for the Chase account will need a fresh `fintrack teller connect` for Chase, since the Legacy-token-based connection is now gone. Existing Chase transactions in the DB stay put; only future syncs need the new enrollment.
 
 **Totals:** 318 unit + 3 convert_demo + 1 import_demo + 11 sync_demo = **333 passing**, 5 ignored, 0 failed. Up from 326 after S04C (+7 new).
 
@@ -54,8 +54,8 @@ Not-found → `DomainError::NotFound`, exit 1.
 | # | Command | Exit Code | Verdict | Duration |
 |---|---------|-----------|---------|----------|
 | 1 | `cargo test` | 0 | pass | 1200ms |
-| 2 | `rtf connections remove --provider teller --external-id token_2czxt73goplp3kmpfogkbj53vm` | 0 | pass | 50ms |
-| 3 | `rtf connections list` | 0 | pass | 30ms |
+| 2 | `fintrack connections remove --provider teller --external-id token_2czxt73goplp3kmpfogkbj53vm` | 0 | pass | 50ms |
+| 3 | `fintrack connections list` | 0 | pass | 30ms |
 
 ## Deviations
 

@@ -62,7 +62,7 @@ Foundation for S04's two sync providers: persistence + domain shapes for account
 - New `SqliteProviderCredentialsRepository` with UPSERT keyed on `provider` (`ON CONFLICT(provider) DO UPDATE SET data, updated_at`) — the first `setup` call stamps `created_at`; every subsequent one replaces `data` and advances `updated_at`.
 
 **CLI:**
-- `rtf accounts link --id <uuid> --provider <simplefin|pluggy> --external-id <remote-id> [--force]`. Validates the provider string up front (friendly error for typos), delegates to `AccountService::link_account` which double-checks with is_linked() before overwriting. `--force` opts in to re-linking.
+- `fintrack accounts link --id <uuid> --provider <simplefin|pluggy> --external-id <remote-id> [--force]`. Validates the provider string up front (friendly error for typos), delegates to `AccountService::link_account` which double-checks with is_linked() before overwriting. `--force` opts in to re-linking.
 
 **SECURITY.md** (`.gsd/milestones/M001/slices/S04/SECURITY.md`): documents the threat model — single-user CLI, credentials plaintext in the user's local DB, equivalent to `~/.aws/credentials` or `~/.ssh/id_rsa`. Calls out that keychain integration is deferred, with clear revisit triggers.
 

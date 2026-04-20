@@ -16,9 +16,9 @@ completed_at: 2026-04-20T11:04:54.464Z
 blocker_discovered: false
 ---
 
-# T04: Transfer pair detection: greedy same-currency matching ±3 days, wired into `rtf categorize --detect-transfers`.
+# T04: Transfer pair detection: greedy same-currency matching ±3 days, wired into `fintrack categorize --detect-transfers`.
 
-**Transfer pair detection: greedy same-currency matching ±3 days, wired into `rtf categorize --detect-transfers`.**
+**Transfer pair detection: greedy same-currency matching ±3 days, wired into `fintrack categorize --detect-transfers`.**
 
 ## What Happened
 

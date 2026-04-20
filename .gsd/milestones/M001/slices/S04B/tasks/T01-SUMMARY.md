@@ -24,9 +24,9 @@ completed_at: 2026-04-19T22:15:02.874Z
 blocker_discovered: false
 ---
 
-# T01: TellerAdapter (Bearer auth + cursor pagination), `rtf teller setup --access-token`, `sync --provider teller`, unified sync gets a third `teller` slot, accounts link extended to teller, +14 tests (11 adapter + 3 integration).
+# T01: TellerAdapter (Bearer auth + cursor pagination), `fintrack teller setup --access-token`, `sync --provider teller`, unified sync gets a third `teller` slot, accounts link extended to teller, +14 tests (11 adapter + 3 integration).
 
-**TellerAdapter (Bearer auth + cursor pagination), `rtf teller setup --access-token`, `sync --provider teller`, unified sync gets a third `teller` slot, accounts link extended to teller, +14 tests (11 adapter + 3 integration).**
+**TellerAdapter (Bearer auth + cursor pagination), `fintrack teller setup --access-token`, `sync --provider teller`, unified sync gets a third `teller` slot, accounts link extended to teller, +14 tests (11 adapter + 3 integration).**
 
 ## What Happened
 
@@ -34,7 +34,7 @@ Follows the SimpleFIN/Pluggy template nearly line-for-line — the S04 adapter a
 
 **TellerAdapter** (`src/infrastructure/sync_adapter/teller.rs`) — Bearer token in `Authorization` header, GET `/accounts` → raw JSON array at top level (no wrapper, unlike SimpleFIN), then per-account `/accounts/{id}/transactions?from_date=&count=500[&from_id=cursor]` with cursor-based pagination that stops when the server returns fewer rows than requested. Sign convention: Teller pre-signs amounts (debit = negative, credit = positive) — no inversion. Silently skips accounts in unsupported currencies (e.g. EUR) so the domain only sees USD/BRL. Date arrives as ISO `YYYY-MM-DD`, amount as signed decimal string, description + `details.counterparty.name` for payee with fallback. 11 unit tests: happy path with mixed debit/credit signs, Bearer header present, cursor pagination (full page → short page), unsupported currency skipped, missing-amount error, malformed-date error, 401 propagates, payee fallback to description, default since triggers one /accounts call, empty-transactions short-circuits.
 
-**`rtf teller setup --access-token <TOKEN>`** (`src/cli/teller.rs`) — non-empty validation, persists `{"access_token":"..."}` in `provider_credentials` via upsert. No network at setup time (lazy auth).
+**`fintrack teller setup --access-token <TOKEN>`** (`src/cli/teller.rs`) — non-empty validation, persists `{"access_token":"..."}` in `provider_credentials` via upsert. No network at setup time (lazy auth).
 
 **CLI glue:**
 - New top-level `Teller { command: TellerCommands }` + `TellerCommands::Setup { access_token }`.
@@ -46,7 +46,7 @@ Follows the SimpleFIN/Pluggy template nearly line-for-line — the S04 adapter a
 
 **Integration tests (+3 in tests/sync_demo.rs):** missing-creds error message, setup-stores-credentials roundtrip, accounts-link-accepts-teller. Plus one `#[ignore]`d live smoke `live_teller_sync_smoke` with `TELLER_ACCESS_TOKEN` env.
 
-**TELLER_SETUP.md** — step-by-step guide: sign up at teller.io → create Application → launch Teller Connect → copy enrollment access token → `rtf teller setup` → `accounts link` → `sync`. Notes on mTLS, rotation, and the single-enrollment-per-config limitation.
+**TELLER_SETUP.md** — step-by-step guide: sign up at teller.io → create Application → launch Teller Connect → copy enrollment access token → `fintrack teller setup` → `accounts link` → `sync`. Notes on mTLS, rotation, and the single-enrollment-per-config limitation.
 
 **Totals:** 276 unit + 3 convert_demo + 1 import_demo + 11 sync_demo = **291 passing**, 5 ignored (live smokes + live BCB). Up from 274 after S04 — +14 new tests (+11 Teller adapter + +3 Teller CLI integration).
 

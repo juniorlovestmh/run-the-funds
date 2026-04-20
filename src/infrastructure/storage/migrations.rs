@@ -39,6 +39,10 @@ const MIGRATIONS: &[(&str, &str)] = &[
         "009_tags",
         include_str!("../../../migrations/009_tags.sql"),
     ),
+    (
+        "010_category_external_ids",
+        include_str!("../../../migrations/010_category_external_ids.sql"),
+    ),
 ];
 
 pub fn run(db: &mut Database) -> Result<(), DomainError> {

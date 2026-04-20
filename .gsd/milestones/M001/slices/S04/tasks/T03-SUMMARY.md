@@ -24,9 +24,9 @@ completed_at: 2026-04-19T21:23:12.874Z
 blocker_discovered: false
 ---
 
-# T03: PluggyAdapter with lazy-cached OAuth-ish auth, item-scoped account fetch, per-account transaction pagination, and DEBIT/CREDIT sign-from-type; `rtf pluggy setup --client-id --client-secret --item-id` persists credentials; `sync --provider pluggy` wired; PLUGGY_SETUP.md documents the one-time Connect UI flow.
+# T03: PluggyAdapter with lazy-cached OAuth-ish auth, item-scoped account fetch, per-account transaction pagination, and DEBIT/CREDIT sign-from-type; `fintrack pluggy setup --client-id --client-secret --item-id` persists credentials; `sync --provider pluggy` wired; PLUGGY_SETUP.md documents the one-time Connect UI flow.
 
-**PluggyAdapter with lazy-cached OAuth-ish auth, item-scoped account fetch, per-account transaction pagination, and DEBIT/CREDIT sign-from-type; `rtf pluggy setup --client-id --client-secret --item-id` persists credentials; `sync --provider pluggy` wired; PLUGGY_SETUP.md documents the one-time Connect UI flow.**
+**PluggyAdapter with lazy-cached OAuth-ish auth, item-scoped account fetch, per-account transaction pagination, and DEBIT/CREDIT sign-from-type; `fintrack pluggy setup --client-id --client-secret --item-id` persists credentials; `sync --provider pluggy` wired; PLUGGY_SETUP.md documents the one-time Connect UI flow.**
 
 ## What Happened
 
@@ -50,14 +50,14 @@ Pluggy adapter implementing `BankSyncAdapter` alongside the existing SimpleFIN o
 
 **Tests (+11):** provider_name, happy-path-debit with sign inversion, credit-keeps-positive, already-negative-amount-still-respects-type (proves sign derivation from `type` is authoritative), auth cached across calls (2 accounts → 1 POST + 1 accounts GET + 2 transactions GETs = 4 calls), pagination walks all pages (3-page response), auth-failure propagates, auth-response-missing-apiKey errors, merchant-name-preferred-as-payee, unknown-type errors, HTTP error on accounts endpoint propagates.
 
-**CLI `rtf pluggy setup`** (`src/cli/pluggy.rs`):
+**CLI `fintrack pluggy setup`** (`src/cli/pluggy.rs`):
 - `--client-id`, `--client-secret`, `--item-id` all required non-empty.
 - Stores `{"client_id":..., "client_secret":..., "item_id":...}` JSON blob in `provider_credentials` via upsert. No network call at setup (auth happens lazily on first sync).
 - +3 tests: persist round-trip, upsert-on-rerun, empty-field rejections.
 
 **CLI `sync --provider pluggy`** (`src/cli/sync.rs`): parallels the simplefin path. Loads pluggy credentials from DB; clear error if missing telling the user to run `pluggy setup`. Parses the three-field JSON, constructs `PluggyAdapter` + `SyncService`, runs, prints report.
 
-**PLUGGY_SETUP.md** (`.gsd/milestones/M001/slices/S04/PLUGGY_SETUP.md`): step-by-step for the one-time Connect UI flow to obtain `itemId` — register app → get clientId/secret → exchange for apiKey → create Connect Token → open Pluggy's hosted UI → link bank → copy itemId → run `rtf pluggy setup`. Includes the curl commands for the non-browser steps and notes on rotation.
+**PLUGGY_SETUP.md** (`.gsd/milestones/M001/slices/S04/PLUGGY_SETUP.md`): step-by-step for the one-time Connect UI flow to obtain `itemId` — register app → get clientId/secret → exchange for apiKey → create Connect Token → open Pluggy's hosted UI → link bank → copy itemId → run `fintrack pluggy setup`. Includes the curl commands for the non-browser steps and notes on rotation.
 
 **Totals:** 262 unit + 3 convert_demo + 1 import_demo = 266 passing, 1 ignored. Up from 252 after T02 (+14 new: 11 Pluggy adapter + 3 Pluggy CLI).
 

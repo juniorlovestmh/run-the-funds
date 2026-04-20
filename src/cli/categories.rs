@@ -55,6 +55,8 @@ pub fn handle_group_create(db: &Database, name: String) {
     let group = CategoryGroup {
         id: Uuid::new_v4().to_string(),
         name,
+        external_id: None,
+        external_provider: None,
         created_at: chrono::Utc::now(),
     };
     match repo.save_group(&group) {
@@ -109,6 +111,8 @@ pub fn handle_category_create(db: &Database, name: String, group_id: String) {
         id: Uuid::new_v4().to_string(),
         group_id,
         name,
+        external_id: None,
+        external_provider: None,
         created_at: chrono::Utc::now(),
     };
     match repo.save_category(&cat) {

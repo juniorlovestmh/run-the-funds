@@ -31,9 +31,9 @@ completed_at: 2026-04-19T21:18:46.331Z
 blocker_discovered: false
 ---
 
-# T02: Shared HttpClient trait in src/infrastructure/http.rs; persist_batch extracted from import_from; BankSyncAdapter trait + RemoteTransaction; SimpleFinAdapter with basic-auth URL parsing; SyncService with 2-year default backfill, per-account since, currency guard, FITID dedup, last_sync_at advancement; `rtf simplefin setup <token>` exchanges the base64 token and stores the access URL in the DB; `rtf sync --provider simplefin [--since]` runs the pipeline.
+# T02: Shared HttpClient trait in src/infrastructure/http.rs; persist_batch extracted from import_from; BankSyncAdapter trait + RemoteTransaction; SimpleFinAdapter with basic-auth URL parsing; SyncService with 2-year default backfill, per-account since, currency guard, FITID dedup, last_sync_at advancement; `fintrack simplefin setup <token>` exchanges the base64 token and stores the access URL in the DB; `fintrack sync --provider simplefin [--since]` runs the pipeline.
 
-**Shared HttpClient trait in src/infrastructure/http.rs; persist_batch extracted from import_from; BankSyncAdapter trait + RemoteTransaction; SimpleFinAdapter with basic-auth URL parsing; SyncService with 2-year default backfill, per-account since, currency guard, FITID dedup, last_sync_at advancement; `rtf simplefin setup <token>` exchanges the base64 token and stores the access URL in the DB; `rtf sync --provider simplefin [--since]` runs the pipeline.**
+**Shared HttpClient trait in src/infrastructure/http.rs; persist_batch extracted from import_from; BankSyncAdapter trait + RemoteTransaction; SimpleFinAdapter with basic-auth URL parsing; SyncService with 2-year default backfill, per-account since, currency guard, FITID dedup, last_sync_at advancement; `fintrack simplefin setup <token>` exchanges the base64 token and stores the access URL in the DB; `fintrack sync --provider simplefin [--since]` runs the pipeline.**
 
 ## What Happened
 
@@ -56,9 +56,9 @@ Five coordinated pieces that land SimpleFIN end-to-end.
 
 8 service tests: no-linked-accounts-no-call (1), persists + last_sync_at (1), default since 2-years (1), since-override-wins (1), only-linked-accounts-persisted (1), dedup-on-rerun (1), currency-mismatch-errors (1), date-filter-per-account (1).
 
-**6. `rtf simplefin setup <token>`** (`src/cli/simplefin.rs`). Decodes the base64 setup token — tries standard, falls back to URL-safe — validates the decoded result starts with `http`, POSTs to it with empty body, takes the response as the access URL. Wraps `{"access_url": "<url>"}` as JSON, upserts into `provider_credentials` via the T01 repo. Re-running replaces the stored credentials (rotation). 6 tests: standard-b64, url-safe-b64, garbage rejected, non-http rejected, exchange-and-store persists, empty-response rejected.
+**6. `fintrack simplefin setup <token>`** (`src/cli/simplefin.rs`). Decodes the base64 setup token — tries standard, falls back to URL-safe — validates the decoded result starts with `http`, POSTs to it with empty body, takes the response as the access URL. Wraps `{"access_url": "<url>"}` as JSON, upserts into `provider_credentials` via the T01 repo. Re-running replaces the stored credentials (rotation). 6 tests: standard-b64, url-safe-b64, garbage rejected, non-http rejected, exchange-and-store persists, empty-response rejected.
 
-**7. `rtf sync --provider simplefin [--since]`** (`src/cli/sync.rs`). Loads simplefin credentials from the DB; if missing, clear error message telling the user to run `simplefin setup`. Parses the access_url out of the stored JSON, constructs `SimpleFinAdapter` + `SyncService`, runs, prints `{status:"ok", data: ProviderSyncReport}`. `--provider` is required in T02; T04 makes it optional and runs both providers.
+**7. `fintrack sync --provider simplefin [--since]`** (`src/cli/sync.rs`). Loads simplefin credentials from the DB; if missing, clear error message telling the user to run `simplefin setup`. Parses the access_url out of the stored JSON, constructs `SimpleFinAdapter` + `SyncService`, runs, prints `{status:"ok", data: ProviderSyncReport}`. `--provider` is required in T02; T04 makes it optional and runs both providers.
 
 **Totals:** 248 unit tests + 3 convert_demo + 1 import_demo = 252 passing, 1 ignored (live BCB). Up from 226 after T01 (+22 new).
 
